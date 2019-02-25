@@ -9,7 +9,7 @@ import android.widget.Toast;
 
 public class WiFiDirectBroadcastReceiverExample extends BroadcastReceiver {
 
-    private WifiP2pManager wifiP2pManager;
+    WifiP2pManager wifiP2pManager;
     private WifiP2pManager.Channel channel;
     private AddStudentGroup addStudentGroup;
 
