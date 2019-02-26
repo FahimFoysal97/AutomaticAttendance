@@ -75,11 +75,6 @@ public class AddStudentGroup extends AppCompatActivity {
         //connectClass = new ConnectClass();
         isRefreshing=false;
 
-
-
-
-
-
         peerListListener = peerlist -> {
 
                 if(!peerlist.getDeviceList().equals(peers)){
@@ -87,6 +82,7 @@ public class AddStudentGroup extends AppCompatActivity {
                     peers.addAll(peerlist.getDeviceList());
 
                     System.out.println("Device list changed");
+                    System.out.println(peers);
                     isDeviceListChanged = true;
                     System.out.println("Device list changed 2");
                 }
@@ -97,7 +93,7 @@ public class AddStudentGroup extends AppCompatActivity {
         wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                Toast.makeText(getApplicationContext(), "Searching Devices...", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "Searching Devices...", Toast.LENGTH_SHORT).show();
 
             }
 
@@ -114,17 +110,12 @@ public class AddStudentGroup extends AppCompatActivity {
 
     }
 
-    void connectToDevices(){
-        List<WifiP2pDevice> peerList = new ArrayList<>(peers);
-        //connectToDevice(peerList);
+    void connectToDevice(List<WifiP2pDevice> peerList,int key){
         connectthread = new Thread(() -> {
             System.out.println("into thread");
-            /*try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }*/
-            for (WifiP2pDevice device : peerList) {
+
+            WifiP2pDevice device = peerList.get(key);
+
                 System.out.println(device.deviceAddress);
 
                 if (!connectedDevices.contains(device)) {
@@ -136,7 +127,6 @@ public class AddStudentGroup extends AppCompatActivity {
                     wifiP2pManager.connect(channel, wifiP2pConfig, new WifiP2pManager.ActionListener() {
                         @Override
                         public void onSuccess() {
-
                             System.out.println("Connection making successful with "+device.deviceName);
                         }
 
@@ -151,7 +141,7 @@ public class AddStudentGroup extends AppCompatActivity {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    if (add) {
+                    if(add) {
 
                         System.out.println(device.deviceName + " inside adding");
                         connectedDevices.add(device);
@@ -159,100 +149,84 @@ public class AddStudentGroup extends AppCompatActivity {
 
                         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_list_item_1, connectedDevicesName);
 
-                        //listView.setAdapter(arrayAdapter);
+                        listView.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                listView.setAdapter(arrayAdapter);
+                            }
+                        });
+
+                        wifiP2pManager.removeGroup(channel, new WifiP2pManager.ActionListener() {
+                            @Override
+                            public void onSuccess() {
+                                System.out.println("Disconnecting from device : "+device.deviceName);
+                            }
+
+                            @Override
+                            public void onFailure(int reason) {
+
+                            }
+                        });
+
                         //System.out.println(arrayAdapter);
 
                         //Toast.makeText(getApplicationContext(), "Connected to " + device.deviceName, Toast.LENGTH_LONG).show();
                     }
-                    wifiP2pManager.cancelConnect(channel, new WifiP2pManager.ActionListener() {
-                        @Override
-                        public void onSuccess() {
+                    else { System.out.println("Canceling connection");
+                        wifiP2pManager.cancelConnect(channel, new WifiP2pManager.ActionListener() {
+                            @Override
+                            public void onSuccess() {
+                                if(key+1<peerList.size())connectToDevice(peerList,key+1);
+                            }
 
-                        }
+                            @Override
+                            public void onFailure(int reason) {
 
-                        @Override
-                        public void onFailure(int reason) {
+                            }
+                        });
+                    }
 
-                        }
-                    });
                 }
-            }
-            isRefreshing=false;
+
+
         });
         connectthread.start();
     }
 
-    /*void connectToDevice(List<WifiP2pDevice> peerList){
-        for (WifiP2pDevice device : peerList) {
+    void connectToDevices(){
+        List<WifiP2pDevice> peerList = new ArrayList<>(peers);
+        if(peerList.size()>0)connectToDevice(peerList,0);
+        isRefreshing = false;
+    }
 
-            if (!connectedDevices.contains(device)) {
-                WifiP2pConfig wifiP2pConfig = new WifiP2pConfig();
-                wifiP2pConfig.deviceAddress = device.deviceAddress;
-                add = false;
-                System.out.println("trying to connect to " + device.deviceName);
-
-                wifiP2pManager.connect(channel, wifiP2pConfig, new WifiP2pManager.ActionListener() {
-                    @Override
-                    public void onSuccess() {
-
-                        System.out.println("Connection making successful with "+device.deviceName);
-                    }
-
-                    @Override
-                    public void onFailure(int reason) {
-                        //Toast.makeText(getApplicationContext(), "Not connected = " + reason, Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                if (add) {
-
-                    System.out.println(device.deviceName + " inside adding");
-                    connectedDevices.add(device);
-                    connectedDevicesName.add(device.deviceName);
-
-                    ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_list_item_1, connectedDevicesName);
-
-                    listView.setAdapter(arrayAdapter);
-                    //System.out.println(arrayAdapter);
-
-                    //Toast.makeText(getApplicationContext(), "Connected to " + device.deviceName, Toast.LENGTH_LONG).show();
-                }
-                wifiP2pManager.cancelConnect(channel, new WifiP2pManager.ActionListener() {
-                    @Override
-                    public void onSuccess() {
-
-                    }
-
-                    @Override
-                    public void onFailure(int reason) {
-
-                    }
-                });
-            }
-        }
-    }*/
 
     void refresh(){
         if(!isRefreshing){
-            System.out.println("Refreshing");
-            isRefreshing = true;
-            wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+            wifiP2pManager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
                 @Override
                 public void onSuccess() {
                     Toast.makeText(getApplicationContext(), "Searching Devices...", Toast.LENGTH_SHORT).show();
-
                 }
 
                 @Override
                 public void onFailure(int reason) {
-                    /*connectionStatus.setText("Discovery starting failed");*/
+
                 }
             });
+            wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+                @Override
+                public void onSuccess() {
+                    Toast.makeText(getApplicationContext(), "Searching Devices...", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onFailure(int reason) {
+
+                }
+            });
+            System.out.println("Refreshing");
+            isRefreshing = true;
+
             try {
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
@@ -261,8 +235,6 @@ public class AddStudentGroup extends AppCompatActivity {
             System.out.println("Connecting to devices");
             //while(isDeviceListChanged)
             connectToDevices();
-
-
             //isRefreshing = false;
         }
     }
