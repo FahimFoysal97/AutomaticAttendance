@@ -103,7 +103,7 @@ public class AddStudentGroup extends AppCompatActivity {
                 /*connectionStatus.setText("Discovery starting failed");*/
             }
         });
-
+        
         findViewById(R.id.button_Refresh).setOnClickListener(v->{
             if(!isRefreshing){
                 isRefreshing = true;
