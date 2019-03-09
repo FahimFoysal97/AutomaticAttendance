@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
@@ -13,7 +15,9 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +94,7 @@ public class AddStudentGroup extends AppCompatActivity {
 
             if( (peers.size()==0) && connectedDevices.isEmpty()  )Toast.makeText(getApplicationContext(),"No device found",Toast.LENGTH_SHORT).show();
         };
-        //refresh();
+
         wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
@@ -103,7 +107,7 @@ public class AddStudentGroup extends AppCompatActivity {
                 /*connectionStatus.setText("Discovery starting failed");*/
             }
         });
-        
+
         findViewById(R.id.button_Refresh).setOnClickListener(v->{
             if(!isRefreshing){
                 isRefreshing = true;
@@ -118,78 +122,187 @@ public class AddStudentGroup extends AppCompatActivity {
 
         });
 
+        findViewById(R.id.button_Back).setOnClickListener(v-> finish());
+
+        findViewById(R.id.button_next).setOnClickListener( v -> {
+            //finish();
+            if(isRefreshing)selectDeviceThread.interrupt();
+            setContentView(R.layout.activity_add_student_group_done);
+            findViewById(R.id.button_done).setOnClickListener( v1 -> {
+                //finish();
+                String groupName,session;
+                groupName = ((EditText)findViewById(R.id.editText_group_name)).getText().toString();
+                session = ((EditText)findViewById(R.id.editText_session)).getText().toString();
+                SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("AutomaticAttendance",MODE_PRIVATE,null);
+                sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS StudentGroupList (groupname varchar PRIMARY KEY, session varchar) ");
+                String string = "select * from StudentGroupList where groupname = ?" ;
+                Cursor c = sqLiteDatabase.rawQuery(string ,new String[]{groupName});
+                //int i = c.getColumnIndex("groupname");
+                c.moveToFirst();
+                if(c!=null && c.getCount()>0){
+                    ((TextView)findViewById(R.id.textView_warning)).setText("GroupName exist");
+                }
+                else {
+                    String string2 = "Insert into StudentGroupList (groupname,session) values (?,?)";
+                    sqLiteDatabase.rawQuery(string2 ,new String[]{groupName,session});
+                    sqLiteDatabase.execSQL("CREATE TABLE " + groupName +" (id varchar primary key, name varchar, imei varchar unique)");
+                    finish();
+                }
+
+            });
+        });
+
+
+
+
     }
 
 
 
     WifiP2pDevice device;
     void startConnecting(){
+        wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
 
-        //if(!isRefreshing){
+            }
+
+            @Override
+            public void onFailure(int reason) {
+
+            }
+        });
+
+        selectDeviceThread = new Thread(() -> {
+
+            System.out.println("Into the selectThread");
+
+            List<WifiP2pDevice> peerList;
+            int i = 0;
+            while (!selectDeviceThread.isInterrupted()) {
+                System.out.println("Into the selectThread 2");
+                peerList = new ArrayList<>(peers);
+                System.out.println("selectDevice : " + selectDevice);
+                System.out.println("isDeviceListChanged : " + isDeviceListChanged);
+                if (selectDevice && isDeviceListChanged) {
+                    System.out.println("Into the selectThread 3 (if) ");
+                    if (i < peerList.size()) {
+                        device = peerList.get(i);
+                        i++;
+                        selectDevice = false;
+
+                        //connectToDevice = true;
 
 
-            wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
-                @Override
-                public void onSuccess() {
 
-                }
 
-                @Override
-                public void onFailure(int reason) {
+                        if (!connectedDevices.contains(device)) {
+                            WifiP2pConfig wifiP2pConfig = new WifiP2pConfig();
+                            wifiP2pConfig.deviceAddress = device.deviceAddress;
+                            add = false;
+                            System.out.println("trying to connect to " + device.deviceName);
 
-                }
-            });
-
-            selectDeviceThread = new Thread(() -> {
-
-                System.out.println("Into the selectThread");
-
-                List<WifiP2pDevice> peerList;
-                int i = 0;
-                while (!selectDeviceThread.isInterrupted()) {
-                    System.out.println("Into the selectThread 2");
-                    peerList = new ArrayList<>(peers);
-                    System.out.println("selectDevice : " + selectDevice);
-                    System.out.println("isDeviceListChanged : " + isDeviceListChanged);
-                    if (AddStudentGroup.this.selectDevice && isDeviceListChanged) {
-                        System.out.println("Into the selectThread 3 (if) ");
-                        if (i < peerList.size()) {
-                            device = peerList.get(i);
-                            i++;
-                            AddStudentGroup.this.selectDevice = false;
-                            AddStudentGroup.this.connectToDevice = true;
-                        } else {
-                            System.out.println("Into the selectThread 3 (else) ");
-                            i = 0;
-                            isDeviceListChanged = false;
-                            selectDevice = true;
-                            wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+                            wifiP2pManager.connect(channel, wifiP2pConfig, new WifiP2pManager.ActionListener() {
                                 @Override
                                 public void onSuccess() {
-
+                                    System.out.println("Connection making successful with " + device.deviceName);
                                 }
 
                                 @Override
                                 public void onFailure(int reason) {
-
+                                    //Toast.makeText(getApplicationContext(), "Not connected = " + reason, Toast.LENGTH_SHORT).show();
                                 }
                             });
 
+                            try {
+                                sleep(6000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            if (add) {
+                                System.out.println(device.deviceName + " inside adding");
+                                connectedDevices.add(device);
+                                connectedDevicesName.add(device.deviceName);
+
+                                ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(AddStudentGroup.this.getApplicationContext(), android.R.layout.simple_list_item_1, connectedDevicesName);
+
+                                listView.post(() -> listView.setAdapter(arrayAdapter));
+
+                                wifiP2pManager.removeGroup(channel, new WifiP2pManager.ActionListener() {
+                                    @Override
+                                    public void onSuccess() {
+                                        System.out.println("Disconnected from device : " + device.deviceName);
+                                        selectDevice = true;
+                                    }
+
+                                    @Override
+                                    public void onFailure(int reason) {
+
+                                    }
+                                });
+
+                            } else {
+                                System.out.println("Canceling connection");
+                                wifiP2pManager.cancelConnect(channel, new WifiP2pManager.ActionListener() {
+                                    @Override
+                                    public void onSuccess() {
+                                        selectDevice = true;
+                                        System.out.println("Canceled connection");
+                                    }
+
+                                    @Override
+                                    public void onFailure(int reason) {
+
+                                    }
+                                });
+                            }
+
+                            //AddStudentGroup.this.connectToDevice = false;
+
                         }
-                        //else selectDeviceThread.interrupt();
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    } else {
+                        System.out.println("Into the selectThread 3 (else) ");
+                        i = 0;
+                        isDeviceListChanged = false;
+                        selectDevice = true;
+
+                        wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+                            @Override
+                            public void onSuccess() {
+
+                            }
+
+                            @Override
+                            public void onFailure(int reason) {
+
+                            }
+                        });
                     }
-                    System.out.println("Select  device loop complete ");
-
+                        //else selectDeviceThread.interrupt();
                 }
-
-            });
+                System.out.println("Select  device loop complete ");
+            }
+        });
 
         connectToDeviceThread = new Thread(() -> {
             while (!connectToDeviceThread.isInterrupted()) {
 
                 if (AddStudentGroup.this.connectToDevice) {
                     System.out.println("Into the connectThread");
-                    AddStudentGroup.this.connectToDevice = false;
+                    connectToDevice = false;
                     if (!connectedDevices.contains(device)) {
                         WifiP2pConfig wifiP2pConfig = new WifiP2pConfig();
                         wifiP2pConfig.deviceAddress = device.deviceAddress;
@@ -262,12 +375,9 @@ public class AddStudentGroup extends AppCompatActivity {
             }
         });
 
-            if(!selectDeviceThread.isAlive())selectDeviceThread.start();
-            if(!connectToDeviceThread.isAlive())connectToDeviceThread.start();
+        if(!selectDeviceThread.isAlive())selectDeviceThread.start();
+        //if(!connectToDeviceThread.isAlive())connectToDeviceThread.start();
 
-
-
-        //}
     }
 
     void stopConnecting(){
