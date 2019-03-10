@@ -122,13 +122,28 @@ public class MakeAttendanceSheet extends AppCompatActivity {
             Cursor c = sqLiteDatabase.rawQuery(sql, new String[]{str});
             if(c.getCount()>0){
                 ((TextView)findViewById(R.id.textView_warning2)).setText("Sheet already exist");
+                c.close();
             }
             else {
                 String s1 = "CREATE TABLE "+str+" (id varchar PRIMARY KEY)";
                 sqLiteDatabase.execSQL(s1);
+                s1 = "Select id from " + groupName ;
+                c = sqLiteDatabase.rawQuery(s1, null);
+
+
+                if (c.moveToFirst()) {
+                    while (!c.isAfterLast()) {
+
+                        s1 = "insert into " + str + " " + c.getString(c.getColumnIndex("id"));
+                        sqLiteDatabase.execSQL(s1);
+                        c.moveToNext();
+                    }
+                }
+
+
+                c.close();
                 finish();
             }
-            c.close();
         }
 
     }

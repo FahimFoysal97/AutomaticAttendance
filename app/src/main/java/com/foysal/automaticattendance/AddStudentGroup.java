@@ -121,7 +121,6 @@ public class AddStudentGroup extends AppCompatActivity {
         findViewById(R.id.button_Back).setOnClickListener(v-> finish());
 
         findViewById(R.id.button_next).setOnClickListener( v -> {
-            //finish();
             if(isRefreshing)selectDeviceThread.interrupt();
             setContentView(R.layout.activity_add_student_group_done);
             findViewById(R.id.button_done).setOnClickListener(v1 -> {
