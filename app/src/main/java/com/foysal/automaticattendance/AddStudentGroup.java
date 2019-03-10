@@ -48,8 +48,6 @@ public class AddStudentGroup extends AppCompatActivity {
     Thread selectDeviceThread;
 
     ListView listView;
-    //int i;
-    boolean first = true;
 
 
     @Override
@@ -64,7 +62,7 @@ public class AddStudentGroup extends AppCompatActivity {
             wifiManager.setWifiEnabled(false);
             wifiManager.setWifiEnabled(true);
         }
-        //i=0;
+
         listView = findViewById(R.id.listView);
         wifiP2pManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = wifiP2pManager.initialize(this,getMainLooper(),null);
@@ -75,9 +73,7 @@ public class AddStudentGroup extends AppCompatActivity {
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
         ((Button)findViewById(R.id.button_Refresh)).setText("Start connecting");
-        //connectClass = new ConnectClass();
-        //connectClass.start();
-        //connectClass = new ConnectClass();
+
         isRefreshing=false;
 
         peerListListener = peerlist -> {
@@ -128,12 +124,12 @@ public class AddStudentGroup extends AppCompatActivity {
             //finish();
             if(isRefreshing)selectDeviceThread.interrupt();
             setContentView(R.layout.activity_add_student_group_done);
-            findViewById(R.id.button_done).setOnClickListener( v1 -> {
+            findViewById(R.id.button_done).setOnClickListener(v1 -> {
                 //finish();
                 String groupName,session;
                 groupName = ((EditText)findViewById(R.id.editText_group_name)).getText().toString();
                 session = ((EditText)findViewById(R.id.editText_session)).getText().toString();
-                SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("AutomaticAttendance",MODE_PRIVATE,null);
+                SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
                 sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS StudentGroupList (groupname varchar PRIMARY KEY, session varchar) ");
                 String string = "select * from StudentGroupList where groupname = ?" ;
                 Cursor c = sqLiteDatabase.rawQuery(string ,new String[]{groupName});
@@ -145,10 +141,11 @@ public class AddStudentGroup extends AppCompatActivity {
                 else {
                     String string2 = "Insert into StudentGroupList (groupname,session) values (?,?)";
                     sqLiteDatabase.rawQuery(string2 ,new String[]{groupName,session});
-                    sqLiteDatabase.execSQL("CREATE TABLE " + groupName +" (id varchar primary key, name varchar, imei varchar unique)");
+                    String str = groupName.replaceAll(" ","_")+"_"+session;
+                    sqLiteDatabase.execSQL("CREATE TABLE " + str +" (id varchar primary key, name varchar, imei varchar unique)");
                     finish();
                 }
-
+                c.close();
             });
         });
 

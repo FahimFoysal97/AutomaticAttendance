@@ -1,6 +1,7 @@
 package com.foysal.automaticattendance;
 
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -33,6 +34,8 @@ public class TeacherPanelCourseList extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         adapter = new CourseListAdapter(courses);
         adapter.notifyDataSetChanged();
+
+        //SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
     }
 
 

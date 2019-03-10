@@ -1,5 +1,6 @@
 package com.foysal.automaticattendance;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -35,7 +36,14 @@ public class TeacherPanelAddCourse extends AppCompatActivity {
         else if( (editTextBatch.getText().toString().length()==0) || editTextBatch.getText().toString().trim().equals(" ")){
             editTextBatch.requestFocus();
         }
-        else TeacherPanelCourseList.addCourse(editTextCourseTitle.getText().toString(), editTextCourseCode.getText().toString(), editTextSession.getText().toString(), editTextBatch.getText().toString());
+        else {
+            TeacherPanelCourseList.addCourse(editTextCourseTitle.getText().toString(), editTextCourseCode.getText().toString(), editTextSession.getText().toString(), editTextBatch.getText().toString());
+            SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
+            sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursetitle varchar, coursecode varchar, session varchar, batch vrachar)");
+            String string2 = "Insert into CourseList (coursetitl0e,coursecode,session,batch) values (?,?,?,?)";
+            sqLiteDatabase.rawQuery(string2 ,new String[]{editTextCourseTitle.getText().toString(), editTextCourseCode.getText().toString(), editTextSession.getText().toString(), editTextBatch.getText().toString()});
+            finish();
+        }
     }
 
 

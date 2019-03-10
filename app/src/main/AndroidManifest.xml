@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.foysal.automaticattendance" >
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <!--<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>-->
-    <uses-permission android:name="android.permission.INTERNET"/>
+    package="com.foysal.automaticattendance">
 
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <!--
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -16,32 +18,39 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme" >
-        <activity android:name=".MainActivity" >
+        android:theme="@style/AppTheme">
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".TeacherPanelCourseList"
-            android:windowSoftInputMode="adjustNothing"
-            android:theme="@style/AppTheme" />
-        <activity android:name=".StudentPanel"
-            android:windowSoftInputMode="adjustNothing"
-            android:theme="@style/AppTheme" />
-        <activity android:name=".TeacherPanelAddCourse"
-            android:windowSoftInputMode="adjustNothing"
-            android:theme="@style/AppTheme" />
-        <activity android:name=".AddStudentGroup"
-            android:windowSoftInputMode="adjustNothing"
-            android:theme="@style/AppTheme" />
-        <activity android:name=".StudentListGroup"
-            android:windowSoftInputMode="adjustNothing"
-            android:theme="@style/AppTheme" />
-        <activity android:name=".TeacherPanel"
-            android:windowSoftInputMode="adjustNothing"
-            android:theme="@style/AppTheme" />
+        <activity
+            android:name=".TeacherPanelCourseList"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+        <activity
+            android:name=".StudentPanel"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+        <activity
+            android:name=".TeacherPanelAddCourse"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+        <activity
+            android:name=".AddStudentGroup"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+        <activity
+            android:name=".StudentListGroup"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+        <activity
+            android:name=".TeacherPanel"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+        <activity android:name=".MakeAttendanceSheet"></activity>
     </application>
 
 </manifest>

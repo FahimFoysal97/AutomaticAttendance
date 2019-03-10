@@ -31,6 +31,7 @@ public class StudentListGroup extends AppCompatActivity {
     public void addStudentGroupButtonClicked(View view){
         Intent intent = new Intent(getApplicationContext(),AddStudentGroup.class);
         startActivity(intent);
+        showList();
     }
 
     void showList(){
@@ -49,5 +50,6 @@ public class StudentListGroup extends AppCompatActivity {
             }
 
         }
+        c.close();
     }
 }
