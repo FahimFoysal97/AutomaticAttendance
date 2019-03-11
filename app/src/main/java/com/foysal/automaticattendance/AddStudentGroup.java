@@ -141,7 +141,7 @@ public class AddStudentGroup extends AppCompatActivity {
                     String string2 = "Insert into StudentGroupList (groupname,session) values (?,?)";
                     sqLiteDatabase.rawQuery(string2 ,new String[]{groupName,session});
                     String str = groupName.replaceAll(" ","_")+"_"+session;
-                    sqLiteDatabase.execSQL("CREATE TABLE " + str +" (id varchar primary key, name varchar, imei varchar unique)");
+                    sqLiteDatabase.execSQL("CREATE TABLE " + str +" (id varchar primary key, name varchar, deviceaddress varchar unique)");
                     finish();
                 }
                 c.close();

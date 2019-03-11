@@ -50,7 +50,8 @@
             android:name=".TeacherPanel"
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustNothing" />
-        <activity android:name=".MakeAttendanceSheet"></activity>
+        <activity android:name=".MakeAttendanceSheet" />
+        <activity android:name=".Register"></activity>
     </application>
 
 </manifest>
