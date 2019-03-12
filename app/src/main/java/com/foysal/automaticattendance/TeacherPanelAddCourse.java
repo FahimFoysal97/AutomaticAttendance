@@ -1,5 +1,6 @@
 package com.foysal.automaticattendance;
 
+import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -40,8 +41,19 @@ public class TeacherPanelAddCourse extends AppCompatActivity {
             TeacherPanelCourseList.addCourse(editTextCourseTitle.getText().toString(), editTextCourseCode.getText().toString(), editTextSession.getText().toString(), editTextBatch.getText().toString());
             SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
             sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursetitle varchar, coursecode varchar, session varchar, batch vrachar)");
-            String string2 = "Insert into CourseList (coursetitl0e,coursecode,session,batch) values (?,?,?,?)";
-            sqLiteDatabase.rawQuery(string2 ,new String[]{editTextCourseTitle.getText().toString(), editTextCourseCode.getText().toString(), editTextSession.getText().toString(), editTextBatch.getText().toString()});
+            String title,code,session,batch;
+            title = editTextCourseTitle.getText().toString();
+            code = editTextCourseCode.getText().toString();
+            session = editTextSession.getText().toString();
+            batch = editTextBatch.getText().toString();
+            ContentValues values = new ContentValues();
+            values.put("coursetitle",title);
+            values.put("coursecode",code);
+            values.put("session",session);
+            values.put("batch",batch);
+
+            sqLiteDatabase.insert("CourseList", null, values);
+
             finish();
         }
     }

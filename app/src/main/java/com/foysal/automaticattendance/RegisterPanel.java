@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -15,6 +17,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,10 +34,10 @@ import java.util.Vector;
 
 public class RegisterPanel extends AppCompatActivity {
 
-    EditText nameField,idField;
+    EditText nameField,idField,courseField;
     TextView warning;
 
-    String name,id;
+    String name,id,courseName;
 
 
 
@@ -51,11 +54,8 @@ public class RegisterPanel extends AppCompatActivity {
     boolean add = false;
     boolean isDeviceListChanged = false;
     boolean isRefreshing = false;
-    boolean connectToDevice = false;
-    boolean selectDevice = true;
 
-    Thread connectToDeviceThread;
-    Thread selectDeviceThread;
+
 
     ServerClass serverClass;
     ClientClass clientClass;
@@ -69,6 +69,7 @@ public class RegisterPanel extends AppCompatActivity {
         setContentView(R.layout.activity_register);
         nameField = findViewById(R.id.editText_student_name);
         idField = findViewById(R.id.editText_student_id);
+        courseField = findViewById(R.id.editText_course_name_register);
         warning = findViewById(R.id.textView_warning_register);
 
 
@@ -87,7 +88,7 @@ public class RegisterPanel extends AppCompatActivity {
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        ((Button)findViewById(R.id.button_Refresh)).setText("Start connecting");
+
 
         isRefreshing = false;
 
@@ -122,10 +123,14 @@ public class RegisterPanel extends AppCompatActivity {
         else if(idField.getText().toString().equals("")){
             warning.setText("Enter your id");
         }
+        else if(courseField.getText().toString().equals("")){
+            warning.setText("Enter course name");
+        }
         else {
             setContentView(R.layout.registering);
             name = nameField.getText().toString();
             id = idField.getText().toString();
+            courseName = courseField.getText().toString();
             register();
         }
     }
@@ -160,6 +165,8 @@ public class RegisterPanel extends AppCompatActivity {
             //connectionStatus.setText("Client");
             clientClass = new ClientClass(groupOwnerAddress);
             clientClass.start();
+            String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
+            sendReceive.write(str.getBytes());
         }
 
     };
@@ -204,7 +211,21 @@ public class RegisterPanel extends AppCompatActivity {
                 case 1 :
                     byte[] readbuff = (byte[])msg.obj;
                     String tempMsg = new String(readbuff,0,msg.arg1);
-                    if(tempMsg.equals("1"))
+                    if(tempMsg.equals("1")){
+                        ((TextView)findViewById(R.id.textView9_pleaseWait)).setText("Registration Complete");
+                        ((TextView)findViewById(R.id.textView9_pleaseWait)).setTextColor(Color.GREEN);
+                        ((ProgressBar)findViewById(R.id.progressBar)).setVisibility(View.GONE);
+                        try {
+                            Thread.sleep(2000);
+                            finish();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        SQLiteDatabase sqLiteDatabase = openOrCreateDatabase("StudentPanel",MODE_PRIVATE,null);
+                        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursename varchar PRIMARY KEY, name varchar, id varchar) ");
+                        String str = "Insert into courselist (coursename,name,id) values(?,?,?)";
+                        sqLiteDatabase.rawQuery(str,new String[]{courseName,name,id});
+                    }
                     //what happens with the massage
                     //readMsgBox.setText(tempMsg);
                     break;

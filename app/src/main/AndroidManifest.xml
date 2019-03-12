@@ -51,7 +51,7 @@
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustNothing" />
         <activity android:name=".MakeAttendanceSheet" />
-        <activity android:name=".Register"></activity>
+        <activity android:name=".RegisterPanel"></activity>
     </application>
 
 </manifest>

@@ -8,7 +8,7 @@ import android.view.View;
 public class StudentPanel extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_teacher_panel_course_list);
+        setContentView(R.layout.activity_student_panel);
     }
 
     public void goToRegisterPanelButtonClicked(View view){

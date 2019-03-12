@@ -45,7 +45,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="0dp"
-            android:text="ID:"
+            android:text="ID :"
             android:textSize="18sp" />
 
         <EditText
@@ -54,6 +54,23 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="ID"
+            android:inputType="textPersonName"
+            android:textAlignment="center" />
+
+        <TextView
+            android:id="@+id/textView9"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Course Name :"
+            android:textAlignment="center"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/editText_course_name_register"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="Course Name"
             android:inputType="textPersonName"
             android:textAlignment="center" />
     </LinearLayout>

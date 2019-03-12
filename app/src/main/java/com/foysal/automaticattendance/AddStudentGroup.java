@@ -12,13 +12,28 @@ import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -50,6 +65,10 @@ public class AddStudentGroup extends AppCompatActivity {
     ListView listView;
 
 
+    ServerClass serverClass;
+    ClientClass clientClass;
+    SendReceive sendReceive;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,10 +77,10 @@ public class AddStudentGroup extends AppCompatActivity {
         if (wifiManager != null && !wifiManager.isWifiEnabled()) {
             wifiManager.setWifiEnabled(true);
         }
-        else if(wifiManager != null && wifiManager.isWifiEnabled()){
+        /*else if(wifiManager != null && wifiManager.isWifiEnabled()){
             wifiManager.setWifiEnabled(false);
             wifiManager.setWifiEnabled(true);
-        }
+        }*/
 
         listView = findViewById(R.id.listView);
         wifiP2pManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
@@ -121,6 +140,7 @@ public class AddStudentGroup extends AppCompatActivity {
         findViewById(R.id.button_Back).setOnClickListener(v-> finish());
 
         findViewById(R.id.button_next).setOnClickListener( v -> {
+            if(connectedDevices.isEmpty())return;
             if(isRefreshing)selectDeviceThread.interrupt();
             setContentView(R.layout.activity_add_student_group_done);
             findViewById(R.id.button_done).setOnClickListener(v1 -> {
@@ -390,6 +410,17 @@ public class AddStudentGroup extends AppCompatActivity {
                 add = true;
             }
 
+        final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
+        if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
+            //connectionStatus.setText("Host");
+            serverClass = new ServerClass();
+            serverClass.start();
+        } else if (wifiP2pInfo.groupFormed) {
+            //connectionStatus.setText("Client");
+            clientClass = new ClientClass(groupOwnerAddress);
+            clientClass.start();
+        }
+
     };
 
     @Override
@@ -403,6 +434,140 @@ public class AddStudentGroup extends AppCompatActivity {
         super.onPause();
         unregisterReceiver(broadcastReceiver);
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(wifiManager != null && wifiManager.isWifiEnabled()){
+            wifiManager.setWifiEnabled(false);
+        }
+    }
+
+
+
+    class ServerClass extends Thread{
+
+        Socket socket;
+        ServerSocket serverSocket;
+
+        @Override
+        public void run() {
+            try {
+                serverSocket = new ServerSocket(8888);
+                socket = serverSocket.accept();
+                sendReceive = new SendReceive(socket);
+                sendReceive.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    Handler handler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch(msg.what){
+                case 1 :
+                    byte[] readbuff = (byte[])msg.obj;
+                    String tempMsg = new String(readbuff,0,msg.arg1);
+                    String id,name,done;
+                    try {
+                        JSONObject jsonObject = new JSONObject(tempMsg);
+                        id = jsonObject.getString("id");
+                        name = jsonObject.getString("name");
+                        done = jsonObject.getString("done");
+                        if(done.equals("true")){
+                            sendReceive.write(("1").getBytes());
+                        }
+                    } catch (JSONException e) {
+                        Toast.makeText(AddStudentGroup.this, "Wrong Json", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+
+
+                    //what happens with the massage
+                    //readMsgBox.setText(tempMsg);
+                    break;
+            }
+            return true;
+        }
+    });
+
+
+    class SendReceive extends Thread{
+
+        Socket socket;
+        InputStream inputStream;
+        OutputStream outputStream;
+
+        SendReceive(Socket socket){
+            this.socket = socket;
+            try {
+                inputStream = socket.getInputStream();
+                outputStream = socket.getOutputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        @Override
+        public void run() {
+            byte[] buffer = new byte[1024];
+            int bytes;
+            while(socket!=null){
+                try {
+                    bytes = inputStream.read(buffer);
+                    if(bytes>0){
+                        handler.obtainMessage(1,bytes,-1,buffer).sendToTarget();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public void write(byte[] bytes){
+            try {
+                outputStream.write(bytes);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+    class ClientClass extends Thread{
+
+        Socket socket;
+        String hostAdd;
+
+        ClientClass(InetAddress inetAddress){
+            hostAdd = inetAddress.getHostAddress();
+            socket = new Socket();
+        }
+
+        @Override
+        public void run() {
+            try {
+                socket.connect(new InetSocketAddress(hostAdd,8888),500);
+                sendReceive = new SendReceive(socket);
+                sendReceive.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+
+
+
+
+
 
 
     class WiFiDirectBroadcastReceiver extends BroadcastReceiver {

@@ -17,8 +17,8 @@ public class MakeAttendanceSheet extends AppCompatActivity {
 
     List<String> courses = new ArrayList<>();
     List<String> studentGroups = new ArrayList<>();
-    ArrayAdapter<String> coursesAdapter = new ArrayAdapter<>(this,R.layout.support_simple_spinner_dropdown_item,courses);
-    ArrayAdapter<String> studentGroupAdapter = new ArrayAdapter<>(this,R.layout.support_simple_spinner_dropdown_item,studentGroups);
+    ArrayAdapter<String> coursesAdapter;
+    ArrayAdapter<String> studentGroupAdapter;
     Spinner courseSpinner;
     Spinner studentGroupSpinner;
     boolean courseSelected = false;
@@ -30,10 +30,13 @@ public class MakeAttendanceSheet extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_make_attendance_sheet);
+        coursesAdapter = new ArrayAdapter<>(this,R.layout.support_simple_spinner_dropdown_item,courses);
+        studentGroupAdapter = new ArrayAdapter<>(this,R.layout.support_simple_spinner_dropdown_item,studentGroups);
         courseSpinner = findViewById(R.id.spinner_course);
         studentGroupSpinner = findViewById(R.id.spinner_student_group);
         studentGroupSpinner.setAdapter(coursesAdapter);
         courseSpinner.setAdapter(studentGroupAdapter);
+
         setCourseSpinner();
         setStudentGroupSpinner();
         sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
@@ -67,6 +70,7 @@ public class MakeAttendanceSheet extends AppCompatActivity {
     }
 
     void setCourseSpinner(){
+        sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursecode varchar, coursetitle varchar, session varchar, batch vrachar)");
         Cursor c = sqLiteDatabase.rawQuery("select * from CourseList",null);
 
