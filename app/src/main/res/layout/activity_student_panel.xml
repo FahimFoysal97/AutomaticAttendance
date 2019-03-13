@@ -33,6 +33,7 @@
             android:id="@+id/button_give_attendance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:onClick="goToGiveAttendancePanel"
             android:text="Give Attendance"
             android:textAlignment="center"
             android:textAllCaps="false" />

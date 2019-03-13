@@ -1,6 +1,7 @@
 package com.foysal.automaticattendance;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -28,6 +29,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -38,6 +40,8 @@ public class RegisterPanel extends AppCompatActivity {
     TextView warning;
 
     String name,id,courseName;
+
+    ServerSocket serverSocket;
 
 
 
@@ -71,6 +75,21 @@ public class RegisterPanel extends AppCompatActivity {
         idField = findViewById(R.id.editText_student_id);
         courseField = findViewById(R.id.editText_course_name_register);
         warning = findViewById(R.id.textView_warning_register);
+
+
+        serverSocket = null;
+        try {
+            serverSocket = new ServerSocket(8888);
+
+        } catch (IOException e) {
+            /*try {
+                serverSocket.setReuseAddress(true);
+            } catch (SocketException e1) {
+                e1.printStackTrace();
+            }*/
+            System.out.println("Server socket not initialized");
+            e.printStackTrace();
+        }
 
 
 
@@ -159,14 +178,14 @@ public class RegisterPanel extends AppCompatActivity {
             //connectionStatus.setText("Host");
             serverClass = new ServerClass();
             serverClass.start();
-            String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
-            sendReceive.write(str.getBytes());
+            /*String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
+            sendReceive.write(str.getBytes());*/
         } else if (wifiP2pInfo.groupFormed) {
             //connectionStatus.setText("Client");
             clientClass = new ClientClass(groupOwnerAddress);
             clientClass.start();
-            String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
-            sendReceive.write(str.getBytes());
+            /*String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
+            sendReceive.write(str.getBytes());*/
         }
 
     };
@@ -184,19 +203,50 @@ public class RegisterPanel extends AppCompatActivity {
     }
 
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        serverSocket = null;
+        if(wifiManager!=null && wifiManager.isWifiEnabled())wifiManager.setWifiEnabled(false);
+
+    }
+
+    void done(){
+        ((TextView)findViewById(R.id.textView9_pleaseWait)).setText("Registration Complete");
+        ((TextView)findViewById(R.id.textView9_pleaseWait)).setTextColor(Color.GREEN);
+        ((ProgressBar)findViewById(R.id.progressBar)).setVisibility(View.GONE);
+
+        SQLiteDatabase sqLiteDatabase = openOrCreateDatabase("StudentPanel",MODE_PRIVATE,null);
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursename varchar PRIMARY KEY, name varchar, id varchar) ");
+        ContentValues values = new ContentValues();
+        values.put("coursename",courseName);
+        values.put("name",name);
+        values.put("id",id);
+        sqLiteDatabase.insert("Courselist",null,values);
+    }
 
     class ServerClass extends Thread{
 
         Socket socket;
-        ServerSocket serverSocket;
+        //ServerSocket serverSocket;
 
         @Override
         public void run() {
             try {
-                serverSocket = new ServerSocket(8888);
+                //serverSocket = new ServerSocket(8888);
                 socket = serverSocket.accept();
                 sendReceive = new SendReceive(socket);
                 sendReceive.start();
+                String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
+                sendReceive.write(str.getBytes());
+
+                done();
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -211,21 +261,31 @@ public class RegisterPanel extends AppCompatActivity {
                 case 1 :
                     byte[] readbuff = (byte[])msg.obj;
                     String tempMsg = new String(readbuff,0,msg.arg1);
-                    if(tempMsg.equals("1")){
+                    /*if(tempMsg.equals("1")){
                         ((TextView)findViewById(R.id.textView9_pleaseWait)).setText("Registration Complete");
                         ((TextView)findViewById(R.id.textView9_pleaseWait)).setTextColor(Color.GREEN);
                         ((ProgressBar)findViewById(R.id.progressBar)).setVisibility(View.GONE);
-                        try {
-                            Thread.sleep(2000);
-                            finish();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+
                         SQLiteDatabase sqLiteDatabase = openOrCreateDatabase("StudentPanel",MODE_PRIVATE,null);
                         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursename varchar PRIMARY KEY, name varchar, id varchar) ");
-                        String str = "Insert into courselist (coursename,name,id) values(?,?,?)";
-                        sqLiteDatabase.rawQuery(str,new String[]{courseName,name,id});
-                    }
+                        ContentValues values = new ContentValues();
+                        values.put("coursename",courseName);
+                        values.put("name",name);
+                        values.put("id",id);
+                        sqLiteDatabase.insert("Courselist",null,values);
+
+                        try {
+                            serverSocket.close();
+                            //Thread.sleep(2000);
+                            System.out.println("Registration complete");
+                            //serverSocket = null;
+                            //finish();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        //String str = "Insert into courselist (coursename,name,id) values(?,?,?)";
+                        //sqLiteDatabase.rawQuery(str,new String[]{courseName,name,id});
+                    }*/
                     //what happens with the massage
                     //readMsgBox.setText(tempMsg);
                     break;
@@ -295,6 +355,9 @@ public class RegisterPanel extends AppCompatActivity {
                 socket.connect(new InetSocketAddress(hostAdd,8888),500);
                 sendReceive = new SendReceive(socket);
                 sendReceive.start();
+                String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
+                sendReceive.write(str.getBytes());
+                done();
             } catch (IOException e) {
                 e.printStackTrace();
             }

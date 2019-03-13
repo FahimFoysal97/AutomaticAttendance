@@ -61,7 +61,7 @@
         android:layout_marginStart="163dp"
         android:layout_marginEnd="163dp"
         android:layout_marginBottom="24dp"
-        android:text="NB : Please, stop your wifi, wifi hotspot, bluetooth, and data connections first."
+        android:text="NB : Please, disable your wifi, wifi hotspot, bluetooth, and data connections first."
         android:textAlignment="center"
         android:textColor="@color/colorAccent"
         android:textSize="18sp"

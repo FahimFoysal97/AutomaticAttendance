@@ -64,6 +64,7 @@
             android:id="@+id/button_take_attendance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:onClick="takeAttendanceButtonClicked"
             android:text="Take Atendance"
             android:textAllCaps="false" />
 

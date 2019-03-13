@@ -9,7 +9,7 @@ import android.widget.EditText;
 
 public class TeacherPanelAddCourse extends AppCompatActivity {
 
-    protected EditText editTextCourseCode, editTextCourseTitle, editTextSession, editTextBatch;
+    protected EditText editTextCourseCode, editTextCourseTitle;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -17,8 +17,8 @@ public class TeacherPanelAddCourse extends AppCompatActivity {
 
         editTextCourseCode = findViewById(R.id.editText_Code);
         editTextCourseTitle = findViewById(R.id.editText_Title);
-        editTextSession = findViewById(R.id.editText_Session);
-        editTextBatch = findViewById(R.id.editText_Batch);
+        //editTextSession = findViewById(R.id.editText_Session);
+
 
 
 
@@ -31,26 +31,21 @@ public class TeacherPanelAddCourse extends AppCompatActivity {
         else if( (editTextCourseCode.getText().toString().length()==0) || editTextCourseCode.getText().toString().trim().equals(" ")){
             editTextCourseCode.requestFocus();
         }
-        else if( (editTextSession.getText().toString().length()==0) || editTextSession.getText().toString().trim().equals(" ")){
-            editTextSession.requestFocus();
-        }
-        else if( (editTextBatch.getText().toString().length()==0) || editTextBatch.getText().toString().trim().equals(" ")){
-            editTextBatch.requestFocus();
-        }
+
         else {
-            TeacherPanelCourseList.addCourse(editTextCourseTitle.getText().toString(), editTextCourseCode.getText().toString(), editTextSession.getText().toString(), editTextBatch.getText().toString());
+            TeacherPanelCourseList.addCourse(editTextCourseTitle.getText().toString(), editTextCourseCode.getText().toString());
             SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
-            sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursetitle varchar, coursecode varchar, session varchar, batch vrachar)");
+            sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursetitle varchar, coursecode varchar)");
             String title,code,session,batch;
             title = editTextCourseTitle.getText().toString();
             code = editTextCourseCode.getText().toString();
-            session = editTextSession.getText().toString();
-            batch = editTextBatch.getText().toString();
+            //session = editTextSession.getText().toString();
+
             ContentValues values = new ContentValues();
             values.put("coursetitle",title);
             values.put("coursecode",code);
-            values.put("session",session);
-            values.put("batch",batch);
+            //values.put("session",session);
+
 
             sqLiteDatabase.insert("CourseList", null, values);
 

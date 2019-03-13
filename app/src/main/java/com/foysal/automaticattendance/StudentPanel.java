@@ -15,4 +15,8 @@ public class StudentPanel extends AppCompatActivity {
         Intent intent = new Intent(getApplicationContext(),RegisterPanel.class);
         startActivity(intent);
     }
+    public void goToGiveAttendancePanel(View view){
+        Intent intent = new Intent(getApplicationContext(),GiveAttendance.class);
+        startActivity(intent);
+    }
 }
