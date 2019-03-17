@@ -607,42 +607,38 @@ public class AddStudentGroup extends AppCompatActivity {
 
         @Override
         public void run() {
-            System.out.println("Inside Server");
             try {
                 serverSocket = new ServerSocket(8888);
-                System.out.println("Server Socket Initialized");
             } catch (IOException e) {
                 e.printStackTrace();
             }
             try {
                 socket = serverSocket.accept();
-                System.out.println("Socket Initialized");
             } catch (IOException e) {
                 e.printStackTrace();
             }
             try {
-
-
                 bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                System.out.println("Buffer Initialized");
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
             while(socket!=null && !serverSendReceive.isInterrupted()){
-                System.out.println("Inside Loop");
                 try {
                     String temp = bufferedReader.readLine();
 
-                    if(temp!=null ){
+                    if(temp!=null )if( !temp.equals("null")){
                         JSONObject jsonObject = new JSONObject(temp);
                         id = jsonObject.getString("id");
                         name = jsonObject.getString("name");
                         done = jsonObject.getString("done");
 
+                        JSONObject jsonObject1 = new JSONObject();
+                        jsonObject1.put("done","done");
+                        write(jsonObject1.toString());
+
                         remove = true;
-                        System.out.println( "Temp = "+temp);
                         bufferedReader.close();
                         bufferedWriter.close();
                         socket.close();
@@ -668,13 +664,14 @@ public class AddStudentGroup extends AppCompatActivity {
             } catch (IOException  | NullPointerException e) {
                 e.printStackTrace();
             }
-            System.out.println("Server Job Done");
         }
 
         public void write(String str){
             try {
                 //bufferedWriter.
                 bufferedWriter.write(str);
+                bufferedWriter.newLine();
+                bufferedWriter.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -710,6 +707,11 @@ public class AddStudentGroup extends AppCompatActivity {
                         id = jsonObject.getString("id");
                         name = jsonObject.getString("name");
                         done = jsonObject.getString("done");
+
+                        JSONObject jsonObject1 = new JSONObject();
+                        jsonObject1.put("done","done");
+                        write(jsonObject1.toString());
+
                         remove = true;
                         bufferedReader.close();
                         bufferedWriter.close();
@@ -722,11 +724,21 @@ public class AddStudentGroup extends AppCompatActivity {
                 }
 
             }
+            try {
+                if(bufferedReader!=null)bufferedReader.close();
+                if(bufferedWriter!=null)bufferedWriter.close();
+                if(socket!=null)socket.close();
+                socket = null;
+            } catch (IOException  | NullPointerException e) {
+                e.printStackTrace();
+            }
         }
 
         public void write(String str){
             try {
                 bufferedWriter.write(str);
+                bufferedWriter.newLine();
+                bufferedWriter.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }

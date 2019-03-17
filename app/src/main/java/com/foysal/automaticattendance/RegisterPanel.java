@@ -287,35 +287,8 @@ public class RegisterPanel extends AppCompatActivity {
         values.put("name",name);
         values.put("id",id);
         sqLiteDatabase.insert("Courselist",null,values);
-        /*try {
-            serverSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        serverSocket = null;*/
 
-        wifiP2pManager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-
-            }
-
-            @Override
-            public void onFailure(int reason) {
-
-            }
-        });
-        wifiP2pManager.removeGroup(channel, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-
-            }
-
-            @Override
-            public void onFailure(int reason) {
-
-            }
-        });
+        if(wifiManager.isWifiEnabled())wifiManager.setWifiEnabled(false);
     }
 
 
@@ -377,45 +350,7 @@ public class RegisterPanel extends AppCompatActivity {
     }
 
 
-    /*Handler handler = new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(Message msg) {
-            switch(msg.what){
-                case 1 :
-                    byte[] readbuff = (byte[])msg.obj;
-                    String tempMsg = new String(readbuff,0,msg.arg1);
-                    *//*if(tempMsg.equals("1")){
-                        ((TextView)findViewById(R.id.textView9_pleaseWait)).setText("Registration Complete");
-                        ((TextView)findViewById(R.id.textView9_pleaseWait)).setTextColor(Color.GREEN);
-                        ((ProgressBar)findViewById(R.id.progressBar)).setVisibility(View.GONE);
 
-                        SQLiteDatabase sqLiteDatabase = openOrCreateDatabase("StudentPanel",MODE_PRIVATE,null);
-                        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursename varchar PRIMARY KEY, name varchar, id varchar) ");
-                        ContentValues values = new ContentValues();
-                        values.put("coursename",courseName);
-                        values.put("name",name);
-                        values.put("id",id);
-                        sqLiteDatabase.insert("Courselist",null,values);
-
-                        try {
-                            serverSocket.close();
-                            //Thread.sleep(2000);
-                            System.out.println("Registration complete");
-                            //serverSocket = null;
-                            //finish();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        //String str = "Insert into courselist (coursename,name,id) values(?,?,?)";
-                        //sqLiteDatabase.rawQuery(str,new String[]{courseName,name,id});
-                    }*//*
-                    //what happens with the massage
-                    //readMsgBox.setText(tempMsg);
-                    break;
-            }
-            return true;
-        }
-    });*/
 
 
     class SendReceive extends Thread{
@@ -441,14 +376,19 @@ public class RegisterPanel extends AppCompatActivity {
            byte[] buffer = new byte[1024];
             int bytes;
             while(socket!=null && !isInterrupted()){
-                /*try {
-                    //bytes = inputStream.read(buffer);
-                    if(bytes>0){
-                        //handler.obtainMessage(1,bytes,-1,buffer).sendToTarget();
+                try {
+                    String temp = bufferedReader.readLine();
+                    System.out.println(temp);
+                    if(temp!=null )if( !temp.equals("null")){
+                        JSONObject jsonObject = new JSONObject(temp);
+                        if(jsonObject.getString("done").equals("done"))done();
+                            //write("done");
+
                     }
-                } catch (IOException e) {
+
+                } catch (IOException | JSONException e) {
                     e.printStackTrace();
-                }*/
+                }
             }
         }
 
@@ -497,7 +437,7 @@ public class RegisterPanel extends AppCompatActivity {
                 System.out.println("Data sent");
 
                 //while(true);
-                //done();
+                done();
             } catch (IOException e) {
                 e.printStackTrace();
             }
