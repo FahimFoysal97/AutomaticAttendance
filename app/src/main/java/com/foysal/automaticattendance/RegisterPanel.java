@@ -231,45 +231,6 @@ public class RegisterPanel extends AppCompatActivity {
     }
 
 
-    /*@Override
-    protected void onDestroy() {
-        super.onDestroy();
-        try {
-            socket.close();
-            serverSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        sendReceive.interrupt();
-        serverSocket = null;
-        socket = null;
-        wifiP2pManager.removeGroup(channel, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-
-            }
-
-            @Override
-            public void onFailure(int reason) {
-
-            }
-        });
-        wifiP2pManager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-
-            }
-
-            @Override
-            public void onFailure(int reason) {
-
-            }
-        });
-        if(wifiManager!=null && wifiManager.isWifiEnabled())wifiManager.setWifiEnabled(false);
-
-    }*/
-
     void done(){
 
         pleaseWait.post(()->{
@@ -337,7 +298,7 @@ public class RegisterPanel extends AppCompatActivity {
                 }
                 System.out.println("Sending Data : " + jsonObject.toString());
                 //String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
-                sendReceive.write(jsonObject.toString()+"\n");
+                sendReceive.write(jsonObject.toString());
                 System.out.println("Data sent");
                 //Thread.sleep(500);
 
@@ -373,8 +334,7 @@ public class RegisterPanel extends AppCompatActivity {
 
         @Override
         public void run() {
-           byte[] buffer = new byte[1024];
-            int bytes;
+
             while(socket!=null && !isInterrupted()){
                 try {
                     String temp = bufferedReader.readLine();
@@ -437,7 +397,7 @@ public class RegisterPanel extends AppCompatActivity {
                 System.out.println("Data sent");
 
                 //while(true);
-                done();
+                //done();
             } catch (IOException e) {
                 e.printStackTrace();
             }
