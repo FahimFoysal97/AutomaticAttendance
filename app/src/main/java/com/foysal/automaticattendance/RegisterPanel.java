@@ -22,9 +22,16 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -37,12 +44,14 @@ import java.util.Vector;
 public class RegisterPanel extends AppCompatActivity {
 
     EditText nameField,idField,courseField;
-    TextView warning;
+    TextView warning,pleaseWait;
+    ProgressBar progressBar;
+
 
     String name,id,courseName;
 
-    ServerSocket serverSocket;
-
+    /*ServerSocket serverSocket;
+    Socket socket;*/
 
 
     WifiManager wifiManager;
@@ -77,20 +86,26 @@ public class RegisterPanel extends AppCompatActivity {
         warning = findViewById(R.id.textView_warning_register);
 
 
+        /*try{
+            if(serverSocket!=null)serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         serverSocket = null;
+
         try {
             serverSocket = new ServerSocket(8888);
 
         } catch (IOException e) {
-            /*try {
+            *//*try {
                 serverSocket.setReuseAddress(true);
             } catch (SocketException e1) {
                 e1.printStackTrace();
-            }*/
+            }*//*
             System.out.println("Server socket not initialized");
             e.printStackTrace();
         }
-
+*/
 
 
 
@@ -117,10 +132,10 @@ public class RegisterPanel extends AppCompatActivity {
                 peers.clear();
                 peers.addAll(peerlist.getDeviceList());
 
-                System.out.println("Device list changed");
+                //System.out.println("Device list changed");
                 System.out.println(peers);
                 isDeviceListChanged = true;
-                System.out.println("Device list changed 2");
+                //System.out.println("Device list changed 2");
             }
 
             if( (peers.size()==0) && connectedDevices.isEmpty()  )Toast.makeText(getApplicationContext(),"No device found",Toast.LENGTH_SHORT).show();
@@ -147,12 +162,15 @@ public class RegisterPanel extends AppCompatActivity {
         }
         else {
             setContentView(R.layout.registering);
+            progressBar = findViewById(R.id.progressBar);
+            pleaseWait = findViewById(R.id.textView9_pleaseWait);
             name = nameField.getText().toString();
             id = idField.getText().toString();
             courseName = courseField.getText().toString();
             register();
         }
     }
+
 
     void register(){
 
@@ -178,15 +196,18 @@ public class RegisterPanel extends AppCompatActivity {
             //connectionStatus.setText("Host");
             serverClass = new ServerClass();
             serverClass.start();
+            System.out.println("Inside server");
             /*String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
             sendReceive.write(str.getBytes());*/
         } else if (wifiP2pInfo.groupFormed) {
             //connectionStatus.setText("Client");
             clientClass = new ClientClass(groupOwnerAddress);
             clientClass.start();
+            System.out.println("Inside client");
             /*String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
             sendReceive.write(str.getBytes());*/
         }
+
 
     };
 
@@ -202,50 +223,152 @@ public class RegisterPanel extends AppCompatActivity {
         unregisterReceiver(broadcastReceiver);
     }
 
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        destroyAllConnections();
+        if(wifiManager!=null && wifiManager.isWifiEnabled())wifiManager.setWifiEnabled(false);
+    }
+
+
+    /*@Override
+    protected void onDestroy() {
+        super.onDestroy();
         try {
+            socket.close();
             serverSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        sendReceive.interrupt();
         serverSocket = null;
+        socket = null;
+        wifiP2pManager.removeGroup(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onFailure(int reason) {
+
+            }
+        });
+        wifiP2pManager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onFailure(int reason) {
+
+            }
+        });
         if(wifiManager!=null && wifiManager.isWifiEnabled())wifiManager.setWifiEnabled(false);
 
-    }
+    }*/
 
     void done(){
-        ((TextView)findViewById(R.id.textView9_pleaseWait)).setText("Registration Complete");
-        ((TextView)findViewById(R.id.textView9_pleaseWait)).setTextColor(Color.GREEN);
-        ((ProgressBar)findViewById(R.id.progressBar)).setVisibility(View.GONE);
+
+        pleaseWait.post(()->{
+            pleaseWait.setText("Registration Complete");
+            pleaseWait.setTextColor(Color.GREEN);
+        });
+
+        progressBar.post(()->progressBar.setVisibility(View.GONE));
+
 
         SQLiteDatabase sqLiteDatabase = openOrCreateDatabase("StudentPanel",MODE_PRIVATE,null);
-        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursename varchar PRIMARY KEY, name varchar, id varchar) ");
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursename varchar, name varchar, id varchar) ");
         ContentValues values = new ContentValues();
         values.put("coursename",courseName);
         values.put("name",name);
         values.put("id",id);
         sqLiteDatabase.insert("Courselist",null,values);
+        /*try {
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        serverSocket = null;*/
+
+        wifiP2pManager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onFailure(int reason) {
+
+            }
+        });
+        wifiP2pManager.removeGroup(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onFailure(int reason) {
+
+            }
+        });
     }
+
+
+    void destroyAllConnections(){
+        if(sendReceive!=null)if(sendReceive.isAlive())try {
+            sendReceive.bufferedWriter.close();
+            sendReceive.bufferedReader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if(serverClass!=null)if(serverClass.isAlive())try {
+            serverClass.socket.close();
+            serverClass.serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        else if(clientClass!=null)if(clientClass.isAlive()){
+            try {
+                clientClass.socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     class ServerClass extends Thread{
 
         Socket socket;
-        //ServerSocket serverSocket;
+        ServerSocket serverSocket;
 
         @Override
         public void run() {
             try {
-                //serverSocket = new ServerSocket(8888);
+                serverSocket = new ServerSocket(8888);
                 socket = serverSocket.accept();
                 sendReceive = new SendReceive(socket);
                 sendReceive.start();
-                String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
-                sendReceive.write(str.getBytes());
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    jsonObject.put("id",id);
+                    jsonObject.put("name",name);
+                    jsonObject.put("done","true");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("Sending Data : " + jsonObject.toString());
+                //String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
+                sendReceive.write(jsonObject.toString()+"\n");
+                System.out.println("Data sent");
+                //Thread.sleep(500);
 
-                done();
+                //done();
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -254,14 +377,14 @@ public class RegisterPanel extends AppCompatActivity {
     }
 
 
-    Handler handler = new Handler(new Handler.Callback() {
+    /*Handler handler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
             switch(msg.what){
                 case 1 :
                     byte[] readbuff = (byte[])msg.obj;
                     String tempMsg = new String(readbuff,0,msg.arg1);
-                    /*if(tempMsg.equals("1")){
+                    *//*if(tempMsg.equals("1")){
                         ((TextView)findViewById(R.id.textView9_pleaseWait)).setText("Registration Complete");
                         ((TextView)findViewById(R.id.textView9_pleaseWait)).setTextColor(Color.GREEN);
                         ((ProgressBar)findViewById(R.id.progressBar)).setVisibility(View.GONE);
@@ -285,27 +408,28 @@ public class RegisterPanel extends AppCompatActivity {
                         }
                         //String str = "Insert into courselist (coursename,name,id) values(?,?,?)";
                         //sqLiteDatabase.rawQuery(str,new String[]{courseName,name,id});
-                    }*/
+                    }*//*
                     //what happens with the massage
                     //readMsgBox.setText(tempMsg);
                     break;
             }
             return true;
         }
-    });
+    });*/
 
 
     class SendReceive extends Thread{
 
         Socket socket;
-        InputStream inputStream;
-        OutputStream outputStream;
+        BufferedReader bufferedReader;
+        BufferedWriter bufferedWriter;
 
         SendReceive(Socket socket){
             this.socket = socket;
             try {
-                inputStream = socket.getInputStream();
-                outputStream = socket.getOutputStream();
+                bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream())) ;
+
+                bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -314,23 +438,26 @@ public class RegisterPanel extends AppCompatActivity {
 
         @Override
         public void run() {
-            byte[] buffer = new byte[1024];
+           byte[] buffer = new byte[1024];
             int bytes;
-            while(socket!=null){
-                try {
-                    bytes = inputStream.read(buffer);
+            while(socket!=null && !isInterrupted()){
+                /*try {
+                    //bytes = inputStream.read(buffer);
                     if(bytes>0){
-                        handler.obtainMessage(1,bytes,-1,buffer).sendToTarget();
+                        //handler.obtainMessage(1,bytes,-1,buffer).sendToTarget();
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                }
+                }*/
             }
         }
 
-        public void write(byte[] bytes){
+        public void write(String str){
             try {
-                outputStream.write(bytes);
+                bufferedWriter.write(str);
+                bufferedWriter.newLine();
+                //bufferedWriter.flush();
+                //outputStream.write(bytes);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -353,11 +480,24 @@ public class RegisterPanel extends AppCompatActivity {
         public void run() {
             try {
                 socket.connect(new InetSocketAddress(hostAdd,8888),500);
+                socket.getKeepAlive();
                 sendReceive = new SendReceive(socket);
                 sendReceive.start();
-                String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
-                sendReceive.write(str.getBytes());
-                done();
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    jsonObject.put("id",id);
+                    jsonObject.put("name",name);
+                    jsonObject.put("done","true");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("Sending data");
+                //String str =  "{\"id\":\"" + id + "\",\"name\":\"" + name + "\",\"done\":\"true\"}";
+                sendReceive.write(jsonObject.toString());
+                System.out.println("Data sent");
+
+                //while(true);
+                //done();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -444,7 +584,7 @@ public class RegisterPanel extends AppCompatActivity {
                     }
                 }
                 else {
-                    //mainActivity.connectionStatus.setText("Device disconnected");
+                    registerPanel.destroyAllConnections();
                 }
             }
             else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)){

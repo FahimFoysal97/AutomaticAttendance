@@ -51,6 +51,7 @@ public class GiveAttendance extends AppCompatActivity {
                 };
 
                 addCourse(str[0],str[1],str[2]);
+                listView.post(()->adapter.notifyDataSetChanged());
                 c.moveToNext();
             } catch (CursorIndexOutOfBoundsException e){
                 break;
@@ -59,11 +60,11 @@ public class GiveAttendance extends AppCompatActivity {
         }
         c.close();
     }
-    public static void addCourse(String coursename, String name, String id){
+    public void addCourse(String coursename, String name, String id){
 
         String str = "Course name : " + coursename + "\nName : " +name+"\n"+"ID : " + id;
         courses.add(str);
-        adapter.notifyDataSetChanged();
+
 
     }
 }

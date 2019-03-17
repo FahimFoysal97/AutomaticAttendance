@@ -12,6 +12,7 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,6 +20,8 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+
+import static java.lang.Thread.sleep;
 
 public class GivingAttendance extends AppCompatActivity {
 
@@ -31,8 +34,8 @@ public class GivingAttendance extends AppCompatActivity {
     Vector<WifiP2pDevice> connectedDevices = new Vector<>();
     Vector<String> connectedDevicesName = new Vector<>();
     List<WifiP2pDevice> peers = new ArrayList<>();
-    //WifiP2pManager.PeerListListener peerListListener;
-    Thread discover;
+    WifiP2pManager.PeerListListener peerListListener;
+    //Thread discover;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +47,8 @@ public class GivingAttendance extends AppCompatActivity {
         if (wifiManager != null && !wifiManager.isWifiEnabled()) {
             wifiManager.setWifiEnabled(true);
         }
+
+
 
         wifiP2pManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = wifiP2pManager.initialize(this,getMainLooper(),null);
@@ -57,7 +62,7 @@ public class GivingAttendance extends AppCompatActivity {
 
 
 
-        /*peerListListener = peerlist -> {
+        peerListListener = peerlist -> {
 
             if(!peerlist.getDeviceList().equals(peers)){
                 peers.clear();
@@ -70,15 +75,15 @@ public class GivingAttendance extends AppCompatActivity {
             }
 
             if( (peers.size()==0) && connectedDevices.isEmpty()  )Toast.makeText(getApplicationContext(),"No device found",Toast.LENGTH_SHORT).show();
-        };*/
+        };
 
-        try {
+        /*try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
 
-        wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+        /*wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
                 System.out.println("Discovering.....");
@@ -86,14 +91,56 @@ public class GivingAttendance extends AppCompatActivity {
 
             @Override
             public void onFailure(int reason) {
-                System.out.println("not Discovering....." + reason);
+                (findViewById(R.id.progressBar2)).post(()->(findViewById(R.id.progressBar2)).setVisibility(View.GONE));
+                ((TextView)findViewById(R.id.textView9_pleaseWait2)).post(()->{
+                    ((TextView)findViewById(R.id.textView9_pleaseWait2)).setText("Please try again..");
+                    ((TextView)findViewById(R.id.textView9_pleaseWait2)).setTextColor(Color.RED);
+                });
             }
-        });
+        });*/
+
+        discover.start();
 
 
 
     }
 
+    Thread discover = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            try{
+                wifiP2pManager.stopPeerDiscovery(channel, new WifiP2pManager.ActionListener() {
+                    @Override
+                    public void onSuccess() {
+
+                    }
+
+                    @Override
+                    public void onFailure(int reason) {
+
+                    }
+                });
+            } catch (Exception e){
+
+            }
+            try {
+                sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+                @Override
+                public void onSuccess() {
+
+                }
+
+                @Override
+                public void onFailure(int reason) {
+
+                }
+            });
+        }
+    });
 
     @Override
     protected void onDestroy() {
@@ -103,19 +150,33 @@ public class GivingAttendance extends AppCompatActivity {
         }
     }
 
+    void onConnected(){
+        System.out.println("Attendance Giving Successfull");
+        /*(findViewById(R.id.progressBar2)).post(()->*/(findViewById(R.id.progressBar2)).setVisibility(View.GONE)/*)*/;
+        //((TextView)findViewById(R.id.textView9_pleaseWait2)).post(()->{
+            ((TextView)findViewById(R.id.textView9_pleaseWait2)).setText("Attendance Giving Successfull");
+            ((TextView)findViewById(R.id.textView9_pleaseWait2)).setTextColor(Color.GREEN);
+        //});
+    }
+
     WifiP2pManager.ConnectionInfoListener connectionInfoListener = wifiP2pInfo -> {
 
         //final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
-        if (wifiP2pInfo.groupFormed) {
-            (findViewById(R.id.progressBar2)).setVisibility(View.GONE);
-            ((TextView)findViewById(R.id.textView9_pleaseWait2)).setText("Attendance Giving Successfull");
-            ((TextView)findViewById(R.id.textView9_pleaseWait2)).setTextColor(Color.GREEN);
-            try {
-                Thread.sleep(2000);
-                finish();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
+            //connectionStatus.setText("Host");
+            System.out.println("Attendance Giving Successfull");
+            (findViewById(R.id.progressBar2)).post(()->(findViewById(R.id.progressBar2)).setVisibility(View.GONE));
+            ((TextView)findViewById(R.id.textView9_pleaseWait2)).post(()->{
+                ((TextView)findViewById(R.id.textView9_pleaseWait2)).setText("Attendance Giving Successfull");
+                ((TextView)findViewById(R.id.textView9_pleaseWait2)).setTextColor(Color.GREEN);
+            });
+        } else if (wifiP2pInfo.groupFormed) {
+            System.out.println("Attendance Giving Successfull");
+            (findViewById(R.id.progressBar2)).post(()->(findViewById(R.id.progressBar2)).setVisibility(View.GONE));
+            ((TextView)findViewById(R.id.textView9_pleaseWait2)).post(()->{
+                ((TextView)findViewById(R.id.textView9_pleaseWait2)).setText("Attendance Giving Successfull");
+                ((TextView)findViewById(R.id.textView9_pleaseWait2)).setTextColor(Color.GREEN);
+            });
         }
     };
 
@@ -143,7 +204,7 @@ public class GivingAttendance extends AppCompatActivity {
             }
             else if(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)){
                 if(wifiP2pManager!=null){
-                   // wifiP2pManager.requestPeers(channel,givingAttendance.peerListListener);
+                    wifiP2pManager.requestPeers(channel,givingAttendance.peerListListener);
                 }
             }
             else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
@@ -166,4 +227,5 @@ public class GivingAttendance extends AppCompatActivity {
             }
         }
     }
+
 }

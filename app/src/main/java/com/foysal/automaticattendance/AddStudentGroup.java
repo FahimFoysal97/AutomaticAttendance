@@ -28,9 +28,14 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -56,8 +61,9 @@ public class AddStudentGroup extends AppCompatActivity {
     WifiP2pDevice device;
     String id,name,done;
     ArrayList<Student> studentList = new ArrayList<>();
+    ArrayList<String> studentInfoList = new ArrayList<>();
     ArrayAdapter arrayAdapter;
-    ServerSocket serverSocket;
+    //ServerSocket serverSocket;
 
     boolean add = false;
     boolean remove = false;
@@ -72,9 +78,10 @@ public class AddStudentGroup extends AppCompatActivity {
     ListView listView;
 
 
-    ServerClass serverClass;
-    ClientClass clientClass;
-    SendReceive sendReceive;
+    //ServerClass serverClass;
+    //ClientClass clientClass;
+    ServerSendReceive serverSendReceive;
+    ClientSendReceive clientSendReceive;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,7 +97,7 @@ public class AddStudentGroup extends AppCompatActivity {
         }*/
 
         listView = findViewById(R.id.listView);
-        arrayAdapter = new ArrayAdapter<>(AddStudentGroup.this.getApplicationContext(), android.R.layout.simple_list_item_1, studentList);
+        arrayAdapter = new ArrayAdapter<>(AddStudentGroup.this.getApplicationContext(), android.R.layout.simple_list_item_1, studentInfoList);
         listView.setAdapter(arrayAdapter);
         wifiP2pManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = wifiP2pManager.initialize(this,getMainLooper(),null);
@@ -101,12 +108,12 @@ public class AddStudentGroup extends AppCompatActivity {
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
         ((Button)findViewById(R.id.button_Refresh)).setText("Start connecting");
-        serverSocket = null;
+        /*serverSocket = null;
         try {
             serverSocket = new ServerSocket(8888);
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
 
         isRefreshing=false;
 
@@ -116,10 +123,10 @@ public class AddStudentGroup extends AppCompatActivity {
                     peers.clear();
                     peers.addAll(peerlist.getDeviceList());
 
-                    System.out.println("Device list changed");
+                    //System.out.println("Device list changed");
                     System.out.println(peers);
                     isDeviceListChanged = true;
-                    System.out.println("Device list changed 2");
+                    //System.out.println("Device list changed 2");
                 }
 
             if( (peers.size()==0) && connectedDevices.isEmpty()  )Toast.makeText(getApplicationContext(),"No device found",Toast.LENGTH_SHORT).show();
@@ -153,7 +160,7 @@ public class AddStudentGroup extends AppCompatActivity {
         });
 
         findViewById(R.id.button_Back).setOnClickListener(v-> {
-            if(selectDeviceThread.isAlive())selectDeviceThread.interrupt();
+            if(selectDeviceThread!=null && selectDeviceThread.isAlive())selectDeviceThread.interrupt();
             finish();
         });
 
@@ -239,17 +246,17 @@ public class AddStudentGroup extends AppCompatActivity {
 
         selectDeviceThread = new Thread(() -> {
 
-            System.out.println("Into the selectThread");
+            //System.out.println("Into the selectThread");
 
             List<WifiP2pDevice> peerList;
             int i = 0;
             while (!selectDeviceThread.isInterrupted()) {
                 System.out.println("Into the selectThread 2");
                 peerList = new ArrayList<>(peers);
-                System.out.println("selectDevice : " + selectDevice);
-                System.out.println("isDeviceListChanged : " + isDeviceListChanged);
+                //System.out.println("selectDevice : " + selectDevice);
+                //System.out.println("isDeviceListChanged : " + isDeviceListChanged);
                 if (selectDevice && isDeviceListChanged) {
-                    System.out.println("Into the selectThread 3 (if) ");
+                    //System.out.println("Into the selectThread 3 (if) ");
                     if (i < peerList.size()) {
                         device = peerList.get(i);
                         i++;
@@ -263,6 +270,7 @@ public class AddStudentGroup extends AppCompatActivity {
                         if (!connectedDevices.contains(device)) {
                             WifiP2pConfig wifiP2pConfig = new WifiP2pConfig();
                             wifiP2pConfig.deviceAddress = device.deviceAddress;
+                            //wifiP2pConfig.groupOwnerIntent = 15;
                             add = false;
                             System.out.println("trying to connect to " + device.deviceName);
                             //serverSocket = null;
@@ -284,7 +292,7 @@ public class AddStudentGroup extends AppCompatActivity {
                             });
 
                             try {
-                                sleep(6000);
+                                Thread.sleep(6000);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -304,10 +312,13 @@ public class AddStudentGroup extends AppCompatActivity {
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
-
+                                System.out.println("now adding");
                                 //listView.post(() -> listView.setAdapter(arrayAdapter));
                                 studentList.add(new Student(name,id,device.deviceAddress));
-                                arrayAdapter.notifyDataSetChanged();
+                                studentInfoList.add("Name : " + name + "\nID : " + id + "\nDevice Address : " + device.deviceAddress);
+                                //arrayAdapter.notifyDataSetChanged();
+                                ArrayAdapter adapter = new ArrayAdapter(AddStudentGroup.this.getApplicationContext(), android.R.layout.simple_list_item_1, studentInfoList);
+                                listView.post(()->listView.setAdapter(adapter));
                                 wifiP2pManager.removeGroup(channel, new WifiP2pManager.ActionListener() {
                                     @Override
                                     public void onSuccess() {
@@ -373,7 +384,7 @@ public class AddStudentGroup extends AppCompatActivity {
                     }
                         //else selectDeviceThread.interrupt();
                 }
-                System.out.println("Select  device loop complete ");
+                //System.out.println("Select  device loop complete ");
             }
         });
 
@@ -481,14 +492,18 @@ public class AddStudentGroup extends AppCompatActivity {
         final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
         if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
             //connectionStatus.setText("Host");
-            serverClass = new ServerClass();
-            serverClass.start();
+            //serverClass = new ServerClass();
+            //serverClass.start();
+            serverSendReceive = new ServerSendReceive();
+            serverSendReceive.start();
             add = true;
+            System.out.println("Inside server");
         } else if (wifiP2pInfo.groupFormed) {
             //connectionStatus.setText("Client");
-            clientClass = new ClientClass(groupOwnerAddress);
-            clientClass.start();
+            clientSendReceive = new ClientSendReceive(groupOwnerAddress);
+            clientSendReceive.start();
             add = true;
+            System.out.println("Inside client");
         }
 
     };
@@ -508,146 +523,38 @@ public class AddStudentGroup extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if(serverSendReceive!=null)if(serverSendReceive.isAlive())try {
+            serverSendReceive.bufferedWriter.close();
+            serverSendReceive.bufferedReader.close();
+            if(serverSendReceive.serverSocket!=null)serverSendReceive.serverSocket.close();
+            if(serverSendReceive.socket!=null)serverSendReceive.socket.close();
+            serverSendReceive.socket = null;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        else if(clientSendReceive!=null)if(clientSendReceive.isAlive()){
+            try {
+                clientSendReceive.socket.close();
+                clientSendReceive.bufferedWriter.close();
+                clientSendReceive.bufferedReader.close();
+                if(clientSendReceive.socket!=null)clientSendReceive.socket.close();
+                clientSendReceive.socket=null;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
         if(wifiManager != null && wifiManager.isWifiEnabled()){
             wifiManager.setWifiEnabled(false);
         }
-        serverSocket = null;
+
+        //serverSocket = null;
     }
 
 
 
 
-    class ServerClass extends Thread{
-
-        Socket socket;
-        ServerSocket serverSocket;
-
-        @Override
-        public void run() {
-            try {
-
-
-                if(sendReceive == null){
-                    /*if(serverSocket!=null && !serverSocket.isClosed()){
-                        serverSocket.close();
-                        serverSocket = null;
-                    }*/
-                    if(serverSocket==null)serverSocket = new ServerSocket(8888);
-                    if(socket==null)socket = serverSocket.accept();
-                    sendReceive = new SendReceive(socket);
-                    sendReceive.start();
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-    Handler handler = new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(Message msg) {
-            switch(msg.what){
-                case 1 :
-                    byte[] readbuff = (byte[])msg.obj;
-                    String tempMsg = new String(readbuff,0,msg.arg1);
-
-                    try {
-                        JSONObject jsonObject = new JSONObject(tempMsg);
-                        id = jsonObject.getString("id");
-                        name = jsonObject.getString("name");
-                        done = jsonObject.getString("done");
-                        /*if(done.equals("true")){
-                            sendReceive.write(("1").getBytes());
-                            remove = true;
-                            try {
-                                serverSocket.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }*/
-                    } catch (JSONException e) {
-                        Toast.makeText(AddStudentGroup.this, "Wrong Json", Toast.LENGTH_SHORT).show();
-                        e.printStackTrace();
-                    }
-
-
-
-                    //what happens with the massage
-                    //readMsgBox.setText(tempMsg);
-                    break;
-            }
-            return true;
-        }
-    });
-
-
-    class SendReceive extends Thread{
-
-        Socket socket;
-        InputStream inputStream;
-        OutputStream outputStream;
-
-        SendReceive(Socket socket){
-            this.socket = socket;
-            try {
-                inputStream = socket.getInputStream();
-                outputStream = socket.getOutputStream();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
-
-        @Override
-        public void run() {
-            byte[] buffer = new byte[1024];
-            int bytes;
-            while(socket!=null){
-                try {
-                    bytes = inputStream.read(buffer);
-                    if(bytes>0){
-                        handler.obtainMessage(1,bytes,-1,buffer).sendToTarget();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        public void write(byte[] bytes){
-            try {
-                outputStream.write(bytes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-
-    class ClientClass extends Thread{
-
-        Socket socket;
-        String hostAdd;
-
-        ClientClass(InetAddress inetAddress){
-            hostAdd = inetAddress.getHostAddress();
-            socket = new Socket();
-        }
-
-        @Override
-        public void run() {
-            try {
-                socket.connect(new InetSocketAddress(hostAdd,8888),500);
-                sendReceive = new SendReceive(socket);
-                sendReceive.start();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
 
     class Student{
@@ -678,6 +585,161 @@ public class AddStudentGroup extends AppCompatActivity {
             return str;
         }
     }
+
+
+
+
+
+
+
+
+
+
+    class ServerSendReceive extends Thread{
+
+        Socket socket;
+        ServerSocket serverSocket;
+        BufferedReader bufferedReader;
+        BufferedWriter bufferedWriter;
+
+        @Override
+        public void run() {
+            System.out.println("Inside Server");
+            try {
+                serverSocket = new ServerSocket(8888);
+                System.out.println("Server Socket Initialized");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                socket = serverSocket.accept();
+                System.out.println("Socket Initialized");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+
+
+                bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                System.out.println("Buffer Initialized");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            while(socket!=null && !serverSendReceive.isInterrupted()){
+                System.out.println("Inside Loop");
+                try {
+                    int i;
+                    String str = "";
+                    while((i=bufferedReader.read())>0){
+                        str += (char)i;
+                    }System.out.println(str);
+                    String temp = str;
+                    System.out.println( "Temp = "+temp);
+                    if(temp!=null )if( !temp.equals("null")){
+                        JSONObject jsonObject = new JSONObject(temp);
+                        id = jsonObject.getString("id");
+                        name = jsonObject.getString("name");
+                        done = jsonObject.getString("done");
+                        remove = true;
+                        bufferedReader.close();
+                        bufferedWriter.close();
+                        socket.close();
+                        socket = null;
+                        serverSocket.close();
+                        serverSocket = null;
+                        return;
+                    }
+
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    if(bufferedReader!=null)bufferedReader.close();
+                    if(bufferedWriter!=null)bufferedWriter.close();
+                    if(socket!=null)socket.close();
+                    socket = null;
+                    if(serverSocket!=null)serverSocket.close();
+                    serverSocket = null;
+                } catch (IOException  | NullPointerException e) {
+                    e.printStackTrace();
+                }
+
+
+            }
+            System.out.println("Server Job Done");
+        }
+
+        public void write(String str){
+            try {
+                //bufferedWriter.
+                bufferedWriter.write(str);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    class ClientSendReceive extends  Thread{
+        Socket socket;
+        String hostAddress;
+        BufferedReader bufferedReader;
+        BufferedWriter bufferedWriter;
+
+        ClientSendReceive(InetAddress inetAddress){
+            hostAddress = inetAddress.getHostAddress();
+            socket = new Socket();
+        }
+        @Override
+        public void run() {
+            try {
+                socket.connect(new InetSocketAddress(hostAddress,8888),500);
+                bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream())) ;
+                bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            while(socket!=null && !clientSendReceive.isInterrupted()){
+                try {
+                    String temp = bufferedReader.readLine();
+                    System.out.println(temp);
+                    if(temp!=null )if( !temp.equals("null")){
+                        JSONObject jsonObject = new JSONObject(temp);
+                        id = jsonObject.getString("id");
+                        name = jsonObject.getString("name");
+                        done = jsonObject.getString("done");
+                        remove = true;
+                        bufferedReader.close();
+                        bufferedWriter.close();
+                        socket.close();
+                        socket = null;
+                    }
+
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+        public void write(String str){
+            try {
+                bufferedWriter.write(str);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+
+
+
+
+
 
 
 
@@ -734,3 +796,189 @@ public class AddStudentGroup extends AppCompatActivity {
     }
 
 }
+
+
+
+
+
+/*
+class ServerClass extends Thread{
+
+    Socket socket;
+    ServerSocket serverSocket;
+
+    @Override
+    public void run() {
+        try {
+
+
+
+                    */
+/*if(serverSocket!=null && !serverSocket.isClosed()){
+                        serverSocket.close();
+                        serverSocket = null;
+                    }*//*
+
+            serverSocket = new ServerSocket(8888);
+            socket = serverSocket.accept();
+            sendReceive = new SendReceive(socket);
+            sendReceive.start();
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+    */
+/*Handler handler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch(msg.what){
+                case 1 :
+                    byte[] readbuff = (byte[])msg.obj;
+                    String tempMsg = new String(readbuff,0,msg.arg1);
+                    String str="";
+                    for(int i=0;i<tempMsg.length();i++){
+                        str+= (char)Integer.parseInt(String.valueOf(tempMsg.charAt(i)));
+                    }
+                    try {
+                        JSONObject jsonObject = new JSONObject(str);
+
+                        id = jsonObject.getString("id");
+                        name = jsonObject.getString("name");
+                        done = jsonObject.getString("done");
+                        remove = true;
+                        *//*
+*/
+/*if(done.equals("true")){
+                            sendReceive.write(("1").getBytes());
+                            remove = true;
+                            try {
+                                serverSocket.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }*//*
+*/
+/*
+                    } catch (JSONException e) {
+                        Toast.makeText(AddStudentGroup.this, "Wrong Json", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+
+
+
+                    //what happens with the massage
+                    //readMsgBox.setText(tempMsg);
+                    break;
+            }
+            return true;
+        }
+    });*//*
+
+
+    Handler handler = new Handler();
+class SendReceive extends Thread{
+
+    Socket socket;
+    InputStream inputStream;
+    OutputStream outputStream;
+
+    SendReceive(Socket socket){
+        this.socket = socket;
+        try {
+            inputStream = socket.getInputStream();
+            outputStream = socket.getOutputStream();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    @Override
+    public void run() {
+        //byte[] buffer = new byte[2048];
+        //int bytes;
+        while(true){
+            try {
+                socket = (new ServerSocket(8888)).accept();
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                //bytes = inputStream.read(buffer);
+                    */
+/*if(ins.read()>0){
+                        //handler.obtainMessage(1,ins.read(),-1,buffer).sendToTarget();
+
+                    }*//*
+
+                //System.out.println("this is the fact : " + ins.readLine());
+                String line;
+                String msg = "";
+                while ((line = in.readLine()) != null)
+                {
+                    msg = msg + line;
+
+                }
+                if(msg.length()>2 && !msg.equals("null")) {
+                    System.out.println("this is the fact : " + msg);
+                    String finalMsg = msg;
+                    handler.post(() -> {
+                        try {
+                            JSONObject jsonObject = new JSONObject(finalMsg);
+                            id = jsonObject.getString("id");
+                            name = jsonObject.getString("name");
+                            done = jsonObject.getString("done");
+
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        remove = true;
+
+                    });
+                }
+                in.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    public void write(byte[] bytes){
+        try {
+            outputStream.write(bytes);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+class ClientClass extends Thread{
+
+    Socket socket;
+    String hostAdd;
+
+    ClientClass(InetAddress inetAddress){
+        hostAdd = inetAddress.getHostAddress();
+        socket = new Socket();
+    }
+
+    @Override
+    public void run() {
+        try {
+            socket.connect(new InetSocketAddress(hostAdd,8888),500);
+            sendReceive = new SendReceive(socket);
+            sendReceive.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+*/
