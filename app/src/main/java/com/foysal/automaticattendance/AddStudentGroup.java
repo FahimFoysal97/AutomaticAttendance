@@ -297,7 +297,7 @@ public class AddStudentGroup extends AppCompatActivity {
                                 e.printStackTrace();
                             }
                             if (add) {
-                                remove = false;
+                                //remove = false;
                                 System.out.println(device.deviceName + " inside adding");
                                 connectedDevices.add(device);
                                 //connectedDevicesName.add(device.deviceName);
@@ -494,15 +494,18 @@ public class AddStudentGroup extends AppCompatActivity {
             //connectionStatus.setText("Host");
             //serverClass = new ServerClass();
             //serverClass.start();
+            remove = false;
             serverSendReceive = new ServerSendReceive();
             serverSendReceive.start();
             add = true;
             System.out.println("Inside server");
         } else if (wifiP2pInfo.groupFormed) {
             //connectionStatus.setText("Client");
+            remove = false;
             clientSendReceive = new ClientSendReceive(groupOwnerAddress);
             clientSendReceive.start();
             add = true;
+
             System.out.println("Inside client");
         }
 
@@ -630,19 +633,16 @@ public class AddStudentGroup extends AppCompatActivity {
             while(socket!=null && !serverSendReceive.isInterrupted()){
                 System.out.println("Inside Loop");
                 try {
-                    int i;
-                    String str = "";
-                    while((i=bufferedReader.read())>0){
-                        str += (char)i;
-                    }System.out.println(str);
-                    String temp = str;
-                    System.out.println( "Temp = "+temp);
-                    if(temp!=null )if( !temp.equals("null")){
+                    String temp = bufferedReader.readLine();
+
+                    if(temp!=null ){
                         JSONObject jsonObject = new JSONObject(temp);
                         id = jsonObject.getString("id");
                         name = jsonObject.getString("name");
                         done = jsonObject.getString("done");
+
                         remove = true;
+                        System.out.println( "Temp = "+temp);
                         bufferedReader.close();
                         bufferedWriter.close();
                         socket.close();
@@ -655,18 +655,18 @@ public class AddStudentGroup extends AppCompatActivity {
                 } catch (IOException | JSONException e) {
                     e.printStackTrace();
                 }
-                try {
-                    if(bufferedReader!=null)bufferedReader.close();
-                    if(bufferedWriter!=null)bufferedWriter.close();
-                    if(socket!=null)socket.close();
-                    socket = null;
-                    if(serverSocket!=null)serverSocket.close();
-                    serverSocket = null;
-                } catch (IOException  | NullPointerException e) {
-                    e.printStackTrace();
-                }
 
+            }
 
+            try {
+                if(bufferedReader!=null)bufferedReader.close();
+                if(bufferedWriter!=null)bufferedWriter.close();
+                if(socket!=null)socket.close();
+                socket = null;
+                if(serverSocket!=null)serverSocket.close();
+                serverSocket = null;
+            } catch (IOException  | NullPointerException e) {
+                e.printStackTrace();
             }
             System.out.println("Server Job Done");
         }

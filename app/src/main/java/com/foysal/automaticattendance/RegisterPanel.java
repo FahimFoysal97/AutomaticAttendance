@@ -456,7 +456,7 @@ public class RegisterPanel extends AppCompatActivity {
             try {
                 bufferedWriter.write(str);
                 bufferedWriter.newLine();
-                //bufferedWriter.flush();
+                bufferedWriter.flush();
                 //outputStream.write(bytes);
             } catch (IOException e) {
                 e.printStackTrace();
