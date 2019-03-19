@@ -187,14 +187,34 @@ public class AddStudentGroup extends AppCompatActivity {
             groupName = ((EditText)findViewById(R.id.editText_group_name)).getText().toString();
             session = ((EditText)findViewById(R.id.editText_session)).getText().toString();
             batch = ((EditText)findViewById(R.id.editText_batch_addStudentGroup)).getText().toString();
+
+            if(!isAlphanumeric(groupName)){
+                ((TextView)findViewById(R.id.textView_warning)).setText("Group name should be alphanumeric or underscore");
+                return;
+            }
+            if(!Character.isAlphabetic(groupName.charAt(0))){
+                ((TextView)findViewById(R.id.textView_warning)).setText("Group name should be alphanumeric or underscore and start with alphabet");
+                return;
+            }
+            if(!isAlphanumeric(session)){
+                ((TextView)findViewById(R.id.textView_warning)).setText("Session should be alphanumeric or underscore");
+                return;
+            }
+            if(!isAlphanumeric(batch)){
+                ((TextView)findViewById(R.id.textView_warning)).setText("Batch should be alphanumeric or underscore");
+                return;
+            }
+
+
             SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
             sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS StudentGroupList (groupname varchar PRIMARY KEY, session varchar, batch varchar) ");
-            String string = "select * from StudentGroupList where groupname = ?" ;
-            Cursor c = sqLiteDatabase.rawQuery(string ,new String[]{groupName});
+            String string = "select * from StudentGroupList where groupname = \""+groupName+"\"" ;
+            Cursor c = sqLiteDatabase.rawQuery(string,null);
             //int i = c.getColumnIndex("groupname");
             c.moveToFirst();
-            if(c!=null && c.getCount()>0){
+            if( c.getCount()>0){
                 ((TextView)findViewById(R.id.textView_warning)).setText("GroupName exist");
+                return;
             }
             else {
                 //String string2 = "Insert into StudentGroupList (groupname,session) values (?,?)";
@@ -204,14 +224,35 @@ public class AddStudentGroup extends AppCompatActivity {
                 values.put("session",session);
                 values.put("batch",batch);
                 sqLiteDatabase.insert("StudentGroupList",null,values);
-                String str = groupName.replaceAll(" ","_")+"_"+session;
-                sqLiteDatabase.execSQL("CREATE TABLE " + str +" (id varchar primary key, name varchar, deviceaddress varchar unique)");
+                String str = groupName.replaceAll(" ","_")+"_"+session.replaceAll(" ","_")+"_"+batch.replaceAll(" ","_");
+                System.out.println(str);
+                sqLiteDatabase.execSQL("CREATE TABLE \"" + str +"\" (id varchar primary key, name varchar, deviceaddress varchar unique)");
                 //sqLiteDatabase.close();
                 addIntoTheStudentList(str);
+
+                String temp = "Group name : " + groupName +
+                        "\nSession : " + session +
+                        "\nBatch : " + batch;
+
+                StudentListGroup.groupNames.add(temp);
+                StudentListGroup.arrayAdapter.notifyDataSetChanged();
+                c.close();
+                sqLiteDatabase.close();
                 finish();
             }
-            c.close();
+
         });
+    }
+
+    public boolean isAlphanumeric(String str)
+    {
+        char[] charArray = str.toCharArray();
+        for(char c:charArray)
+        {
+            if (!Character.isLetterOrDigit(c) && !Character.isWhitespace(c) && c!='_' )
+                return false;
+        }
+        return true;
     }
 
     void addIntoTheStudentList(String tableName){
@@ -224,9 +265,6 @@ public class AddStudentGroup extends AppCompatActivity {
             values.put("deviceaddress",student.getDeviceAddress());
             sqLiteDatabase.insert(tableName,null,values);
         }
-
-
-
     }
 
 
@@ -526,6 +564,7 @@ public class AddStudentGroup extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        selectDeviceThread.interrupt();
         if(serverSendReceive!=null)if(serverSendReceive.isAlive())try {
             serverSendReceive.bufferedWriter.close();
             serverSendReceive.bufferedReader.close();

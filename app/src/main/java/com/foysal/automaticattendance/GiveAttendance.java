@@ -42,7 +42,7 @@ public class GiveAttendance extends AppCompatActivity {
         Cursor c = sqLiteDatabase.rawQuery("Select * from courselist",null);
 
         c.moveToFirst();
-        while(c!=null && !c.isAfterLast()){
+        while( !c.isAfterLast()){
             try{
                 String str[] = {
                         c.getString(c.getColumnIndex("coursename")),

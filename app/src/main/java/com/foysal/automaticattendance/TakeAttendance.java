@@ -1,7 +1,9 @@
 package com.foysal.automaticattendance;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -43,31 +45,41 @@ public class TakeAttendance extends AppCompatActivity {
         String str = "Select * from AttendanceSheetList";
         Cursor c = sqLiteDatabase.rawQuery(str,null);
 
-        if (c.moveToFirst()) {
+        c.moveToFirst();
             while (!c.isAfterLast()) {
                 String courseTitle,courseCode,groupName,session,batch;
-                courseTitle = c.getString(c.getColumnIndex("courseTitle"));
-                courseCode = c.getString(c.getColumnIndex("courseCode"));
-                groupName = c.getString(c.getColumnIndex("groupName"));
-                session = c.getString(c.getColumnIndex("session"));
-                batch = c.getString(c.getColumnIndex("batch"));
+                try {
 
-                String s = "Course Code : " + courseCode +"\n" +
-                        "Course Title : " + courseTitle + "\n" +
-                        "Group Name : " + groupName + "\n" +
-                        "Session : " + session + "\n" +
-                        "Batch : " + batch;
-                list.add(s);
-                adapter.notifyDataSetChanged();
-                sheetList.add(c.getString(c.getColumnIndex("sheetName")));
-                groupList.add(c.getString(c.getColumnIndex("groupName")));
+                    //System.out.println("reason : " + c.getColumnIndex("coursetitle"));
+                    courseTitle = c.getString(c.getColumnIndex("coursetitle"));
+                    courseCode = c.getString(c.getColumnIndex("coursecode"));
+                    groupName = c.getString(c.getColumnIndex("groupname"));
+                    session = c.getString(c.getColumnIndex("session"));
+                    batch = c.getString(c.getColumnIndex("batch"));
+                    String s = "Group Name : " + groupName + "\n" +
+                            "Session : " + session + "\n" +
+                            "Batch : " + batch + "\n" +
+                            "Course Code : " + courseCode +"\n" +
+                            "Course Title : " + courseTitle  ;
+                    list.add(s);
+                    adapter.notifyDataSetChanged();
+                    sheetList.add(c.getString(c.getColumnIndex("sheetName")));
+                    String t = c.getString(c.getColumnIndex("groupname")).replaceAll(" ","_") + "_" +
+                            c.getString(c.getColumnIndex("session")).replaceAll(" ","_") + "_" +
+                            c.getString(c.getColumnIndex("batch")).replaceAll(" ","_");
+                    groupList.add(t);
+                }catch (CursorIndexOutOfBoundsException e){
+                    e.printStackTrace();
+                }
+
+
                 //s1 = "insert into " + sheetName + " " + c.getString(c.getColumnIndex("id"));
                 //s1 = "ALTER TABLE "+sheetName+" ADD COLUMN "+ id +" INTEGER DEFAULT 0";
                 //sqLiteDatabase.execSQL(s1);
                 c.moveToNext();
             }
             c.close();
-        }
+
 
     }
 

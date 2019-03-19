@@ -62,10 +62,23 @@ public class TakingAttendance extends AppCompatActivity {
     boolean isRefreshing = false;
     boolean connectToDevice = false;
     boolean selectDevice = true;
+    boolean wait = true;
 
     //Thread connectToDeviceThread;
     Thread selectDeviceThread;
-
+    Thread waitThread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            for(int i = 0;!waitThread.isInterrupted()&&i<12;i++){
+                try {
+                    sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            wait = false;
+        }
+    });
 
 
 
@@ -140,7 +153,7 @@ public class TakingAttendance extends AppCompatActivity {
 
     void setAllData(){
         SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
-        String str = "Select * from " + groupName + "order by id";
+        String str = "Select * from " + groupName + " order by id";
         Cursor c = sqLiteDatabase.rawQuery(str,null);
         if (c.moveToFirst()) {
             while (!c.isAfterLast()) {
@@ -169,13 +182,14 @@ public class TakingAttendance extends AppCompatActivity {
         values.put("date",dateToStr);
         for(int i = 0; i<totalStudent; i++){
             if(present[i]){
-                values.put(studentId.get(i),1);
+                values.put("r"+studentId.get(i),1);
             }
             else {
-                values.put(studentId.get(i),0);
+                values.put("r"+studentId.get(i),0);
             }
         }
         sqLiteDatabase.insert(sheetName,null,values);
+        sqLiteDatabase.close();
         finish();
     }
 
@@ -251,6 +265,7 @@ public class TakingAttendance extends AppCompatActivity {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }*/
+                            wait = true;
                             wifiP2pManager.connect(channel, wifiP2pConfig, new WifiP2pManager.ActionListener() {
                                 @Override
                                 public void onSuccess() {
@@ -263,13 +278,15 @@ public class TakingAttendance extends AppCompatActivity {
                                 }
                             });
 
-                            try {
-                                sleep(3000);
+                            waitThread.start();
+
+                            while(wait)try {
+                                sleep(200);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
                             if (add) {
-                                remove = false;
+                                //remove = false;
                                 System.out.println(device.deviceName + " inside adding");
                                 present[studentDeviceAddress.indexOf(device.deviceAddress)]=true;
                                 //connectedDevices.add(device);

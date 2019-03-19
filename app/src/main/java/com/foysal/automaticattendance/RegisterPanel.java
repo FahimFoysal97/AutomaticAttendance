@@ -342,8 +342,6 @@ public class RegisterPanel extends AppCompatActivity {
                     if(temp!=null )if( !temp.equals("null")){
                         JSONObject jsonObject = new JSONObject(temp);
                         if(jsonObject.getString("done").equals("done"))done();
-                            //write("done");
-
                     }
 
                 } catch (IOException | JSONException e) {

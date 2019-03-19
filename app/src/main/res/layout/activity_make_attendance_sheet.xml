@@ -41,6 +41,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:text="Select Course"
+            android:textSize="18sp"
             android:textStyle="bold"
             tools:layout_editor_absoluteX="162dp"
             tools:layout_editor_absoluteY="158dp" />
@@ -50,6 +51,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
+            android:textSize="18sp"
             tools:layout_editor_absoluteX="8dp"
             tools:layout_editor_absoluteY="92dp" />
 
@@ -59,6 +61,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:text="Select Student Group"
+            android:textSize="18sp"
             android:textStyle="bold"
             tools:layout_editor_absoluteX="162dp"
             tools:layout_editor_absoluteY="64dp" />
@@ -68,6 +71,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
+            android:textSize="18sp"
             tools:layout_editor_absoluteX="8dp"
             tools:layout_editor_absoluteY="186dp" />
 

@@ -55,7 +55,7 @@
         <activity android:name=".GiveAttendance" />
         <activity android:name=".GivingAttendance" />
         <activity android:name=".TakeAttendance" />
-        <activity android:name=".takingAttendance"></activity>
+        <activity android:name=".TakingAttendance"></activity>
     </application>
 
 </manifest>
