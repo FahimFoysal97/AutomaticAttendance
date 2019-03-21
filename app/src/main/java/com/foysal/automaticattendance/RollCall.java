@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -109,7 +110,9 @@ public class RollCall extends AppCompatActivity {
         studentListView2.setAdapter(adapter2);
         setAllData();
         totalStudent=studentName.size();
+        adapter = new ArrayAdapter(RollCall.this.getApplicationContext(), android.R.layout.simple_list_item_1, studentArrayList);
         studentListView = findViewById(R.id.listView_studentList_rollCall);
+        studentListView.setAdapter(adapter);
 
         present = new boolean[totalStudent];
         for(int i=0; i<present.length; i++){
@@ -199,6 +202,83 @@ public class RollCall extends AppCompatActivity {
 
         });*/
 
+        studentListView2.setOnItemClickListener((parent, view, position, id) -> {
+            if(isRefreshing){
+                Toast.makeText(getApplicationContext(),"Stop roll call first",Toast.LENGTH_SHORT);
+                return;
+            }
+            String s = studentListView2.getItemAtPosition(position).toString();
+            String str = "";
+            int index = -1;
+            for(int i = 0; i<studentName.size(); i++){
+                str = "ID : " + studentId.get(i)+
+                        "\nName : " + studentName.get(i);
+                if(str.equals(s)){
+                    index = i;
+                    break;
+                }
+            }
+            if(index>-1 && !str.equals("")){
+                present[index]=true;
+                studentArrayList2.remove(str);
+                studentArrayList.add(str);
+                //adapter2.notifyDataSetChanged();
+
+                studentListView2.post(() -> {
+                    studentListView2.setAdapter(adapter2);
+                    adapter2.notifyDataSetChanged();
+                });
+                studentListView.post(() -> {
+                    studentListView.setAdapter(adapter);
+                    adapter.notifyDataSetChanged();
+                });
+                ((TextView)findViewById(R.id.textView_presentNumber_rollCall)).post(() -> {
+                    ((TextView)findViewById(R.id.textView_presentNumber_rollCall)).setText("Present : "+studentArrayList.size());
+                });
+                ((TextView)findViewById(R.id.textView_absentNumber_rollCall)).post(() -> {
+                    ((TextView)findViewById(R.id.textView_absentNumber_rollCall)).setText("Absent : "+studentArrayList2.size());
+                });
+            }
+        });
+
+
+        studentListView.setOnItemClickListener((parent, view, position, id) -> {
+            if(isRefreshing){
+                Toast.makeText(getApplicationContext(),"Stop roll call first",Toast.LENGTH_SHORT);
+                return;
+            }
+            String s = studentListView.getItemAtPosition(position).toString();
+            String str = "";
+            int index = -1;
+            for(int i = 0; i<studentName.size(); i++){
+                str = "ID : " + studentId.get(i)+
+                        "\nName : " + studentName.get(i);
+                if(str.equals(s)){
+                    index = i;
+                    break;
+                }
+            }
+            if(index>-1 && !str.equals("")){
+                present[index]=false;
+                studentArrayList.remove(str);
+                studentArrayList2.add(str);
+                //adapter2.notifyDataSetChanged();
+                studentListView.post(() -> {
+                    studentListView.setAdapter(adapter);
+                    adapter.notifyDataSetChanged();
+                });
+                studentListView2.post(() -> {
+                    studentListView2.setAdapter(adapter2);
+                    adapter2.notifyDataSetChanged();
+                });
+                ((TextView)findViewById(R.id.textView_presentNumber_rollCall)).post(() -> {
+                    ((TextView)findViewById(R.id.textView_presentNumber_rollCall)).setText("Present : "+studentArrayList.size());
+                });
+                ((TextView)findViewById(R.id.textView_absentNumber_rollCall)).post(() -> {
+                    ((TextView)findViewById(R.id.textView_absentNumber_rollCall)).setText("Absent : "+studentArrayList2.size());
+                });
+            }
+        });
 
 
 
@@ -233,6 +313,7 @@ public class RollCall extends AppCompatActivity {
         studentListView2.post(()->adapter2.notifyDataSetChanged());
 
     }
+
 
 
 

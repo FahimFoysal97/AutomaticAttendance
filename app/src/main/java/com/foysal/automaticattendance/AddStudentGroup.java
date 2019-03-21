@@ -210,7 +210,7 @@ public class AddStudentGroup extends AppCompatActivity {
 
             SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
             sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS StudentGroupList (groupName varchar PRIMARY KEY, session varchar, batch varchar) ");
-            String string = "select * from StudentGroupList where groupName = \""+groupName+"\"" ;
+            String string = "select * from StudentGroupList where groupName = \""+groupName+"\" collate nocase " ;
             Cursor c = sqLiteDatabase.rawQuery(string,null);
             //int i = c.getColumnIndex("groupname");
             c.moveToFirst();

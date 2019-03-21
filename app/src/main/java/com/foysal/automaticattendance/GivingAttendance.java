@@ -109,13 +109,18 @@ public class GivingAttendance extends AppCompatActivity {
     }
 
 
-    /*@Override
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         if (wifiManager != null && wifiManager.isWifiEnabled()) {
             wifiManager.setWifiEnabled(false);
         }
-    }*/
+        try {
+            sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
     void onConnected(){
         System.out.println("Attendance Giving Successful");
@@ -124,6 +129,7 @@ public class GivingAttendance extends AppCompatActivity {
             ((TextView)findViewById(R.id.textView9_pleaseWait2)).setText("Attendance Giving Successfull");
             ((TextView)findViewById(R.id.textView9_pleaseWait2)).setTextColor(Color.GREEN);
         });
+        finish();
     }
 
     WifiP2pManager.ConnectionInfoListener connectionInfoListener = wifiP2pInfo -> {

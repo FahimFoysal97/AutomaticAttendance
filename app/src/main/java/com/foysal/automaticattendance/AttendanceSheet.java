@@ -1,9 +1,12 @@
 package com.foysal.automaticattendance;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -31,6 +34,9 @@ public class AttendanceSheet extends AppCompatActivity {
         studentListView = findViewById(R.id.listView_AttendanceSheetStudentList);
         studentListView.setAdapter(adapter);
         setData();
+        studentListView.setOnItemClickListener((parent, view, position, id) -> {
+            showIndividualAttendance(position);
+        });
     }
 
     void setData(){
@@ -72,5 +78,13 @@ public class AttendanceSheet extends AppCompatActivity {
         String str1 = "Select id"+id+" from " + sheetName +" where id"+id+" = 1" ;
         Cursor c1 = sqLiteDatabase.rawQuery(str1,null);
         return String.valueOf(c1.getCount());
+    }
+
+    void showIndividualAttendance(int i){
+        Intent intent = new Intent(this,IndividualStudentAttendance.class);
+        intent.putExtra("sheetName",sheetName);
+        intent.putExtra("groupName",groupName);
+        intent.putExtra("id",studentId.get(i));
+        startActivity(intent);
     }
 }

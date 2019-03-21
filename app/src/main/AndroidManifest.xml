@@ -55,13 +55,13 @@
         <activity android:name=".GiveAttendance" />
         <activity android:name=".GivingAttendance" />
         <activity android:name=".TakeAttendance" />
-        <activity android:name=".TakingAttendance" />
         <activity
             android:name=".RollCall"
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustNothing" />
         <activity android:name=".ShowAttendanceSheetList" />
-        <activity android:name=".AttendanceSheet"></activity>
+        <activity android:name=".AttendanceSheet" />
+        <activity android:name=".IndividualStudentAttendance"></activity>
     </application>
 
 </manifest>
