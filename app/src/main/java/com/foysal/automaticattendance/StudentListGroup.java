@@ -40,14 +40,14 @@ public class StudentListGroup extends AppCompatActivity {
         groupNames.clear();
         arrayAdapter.notifyDataSetChanged();
         SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
-        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS StudentGroupList (groupname varchar PRIMARY KEY, session varchar, batch varchar) ");
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS StudentGroupList (groupName varchar PRIMARY KEY, session varchar, batch varchar) ");
         Cursor c = sqLiteDatabase.rawQuery("select * from StudentGroupList",null);
         //int i = c.getColumnIndex("groupname");
         c.moveToFirst();
         while(!c.isAfterLast()){
             //System.out.println(i);
             try{
-                String str = "Group name : "+c.getString(c.getColumnIndex("groupname")) + "\nSession : " +c.getString(c.getColumnIndex("session")) + "\nBatch : "+c.getString(c.getColumnIndex("batch"));
+                String str = "Group name : "+c.getString(c.getColumnIndex("groupName")) + "\nSession : " +c.getString(c.getColumnIndex("session")) + "\nBatch : "+c.getString(c.getColumnIndex("batch"));
                 groupNames.add(str);
                 c.moveToNext();
             } catch (CursorIndexOutOfBoundsException e){

@@ -1,9 +1,11 @@
 package com.foysal.automaticattendance;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -18,6 +20,8 @@ public class GiveAttendance extends AppCompatActivity {
     static ListView listView;
     static ArrayAdapter adapter;
     static ArrayList<String> courses = new ArrayList<>();
+    WifiManager wifiManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,30 +31,37 @@ public class GiveAttendance extends AppCompatActivity {
         listView = findViewById(R.id.listView_give_attendance_panel_courselist);
         listView.setAdapter(adapter);
         showCourseList();
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(getApplicationContext(),GivingAttendance.class);
-                startActivity(intent);
-            }
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        if (wifiManager != null && !wifiManager.isWifiEnabled()) {
+            wifiManager.setWifiEnabled(true);
+        }
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            Intent intent = new Intent(getApplicationContext(),GivingAttendance.class);
+            startActivity(intent);
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (wifiManager != null && wifiManager.isWifiEnabled()) {
+            wifiManager.setWifiEnabled(false);
+        }
     }
 
     void showCourseList(){
         SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("StudentPanel",MODE_PRIVATE,null);
-        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursename varchar PRIMARY KEY, name varchar, id varchar) ");
-        Cursor c = sqLiteDatabase.rawQuery("Select * from courselist",null);
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (courseName varchar PRIMARY KEY, name varchar, id varchar) ");
+        Cursor c = sqLiteDatabase.rawQuery("Select * from CourseList",null);
 
         c.moveToFirst();
         while( !c.isAfterLast()){
             try{
-                String str[] = {
-                        c.getString(c.getColumnIndex("coursename")),
-                        c.getString(c.getColumnIndex("name")),
-                        c.getString(c.getColumnIndex("id")),
-                };
 
-                addCourse(str[0],str[1],str[2]);
+                String id =c.getString(c.getColumnIndex("id"));
+                String name = c.getString(c.getColumnIndex("name"));
+                String cName = c.getString(c.getColumnIndex("courseName"));
+                addCourse(cName,name,id);
                 listView.post(()->adapter.notifyDataSetChanged());
                 c.moveToNext();
             } catch (CursorIndexOutOfBoundsException e){
@@ -60,11 +71,10 @@ public class GiveAttendance extends AppCompatActivity {
         }
         c.close();
     }
-    public void addCourse(String coursename, String name, String id){
+    public void addCourse(String courseName, String name, String id){
 
-        String str = "Course name : " + coursename + "\nName : " +name+"\n"+"ID : " + id;
+        String str = "Course name : " + courseName + "\nName : " +name+"\n"+"ID : " + id;
         courses.add(str);
-
 
     }
 }

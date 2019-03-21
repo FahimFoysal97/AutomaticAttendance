@@ -1,10 +1,12 @@
 package com.foysal.automaticattendance;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -21,6 +23,8 @@ public class TakeAttendance extends AppCompatActivity {
     ArrayList<String> sheetList = new ArrayList<>();
     ArrayList<String> groupList = new ArrayList<>();
     ArrayAdapter adapter;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,17 +34,19 @@ public class TakeAttendance extends AppCompatActivity {
         listView.setAdapter(adapter);
         showList();
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                getSheetNameAndGroupName(position);
-            }
-        });
+
+        listView.setOnItemClickListener((parent, view, position, id) -> startTakingAttendance(position));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
     }
 
     void showList(){
         SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
-        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS AttendanceSheetList (coursecode varchar, coursetitle varchar, groupname varchar, session varchar, batch varchar, sheetName varchar primary key) ");
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS AttendanceSheetList (courseCode varchar, courseTitle varchar, groupName varchar, session varchar, batch varchar, sheetName varchar primary key) ");
 
         String str = "Select * from AttendanceSheetList";
         Cursor c = sqLiteDatabase.rawQuery(str,null);
@@ -49,11 +55,9 @@ public class TakeAttendance extends AppCompatActivity {
             while (!c.isAfterLast()) {
                 String courseTitle,courseCode,groupName,session,batch;
                 try {
-
-                    //System.out.println("reason : " + c.getColumnIndex("coursetitle"));
-                    courseTitle = c.getString(c.getColumnIndex("coursetitle"));
-                    courseCode = c.getString(c.getColumnIndex("coursecode"));
-                    groupName = c.getString(c.getColumnIndex("groupname"));
+                    courseTitle = c.getString(c.getColumnIndex("courseTitle"));
+                    courseCode = c.getString(c.getColumnIndex("courseCode"));
+                    groupName = c.getString(c.getColumnIndex("groupName"));
                     session = c.getString(c.getColumnIndex("session"));
                     batch = c.getString(c.getColumnIndex("batch"));
                     String s = "Group Name : " + groupName + "\n" +
@@ -64,18 +68,13 @@ public class TakeAttendance extends AppCompatActivity {
                     list.add(s);
                     adapter.notifyDataSetChanged();
                     sheetList.add(c.getString(c.getColumnIndex("sheetName")));
-                    String t = c.getString(c.getColumnIndex("groupname")).replaceAll(" ","_") + "_" +
-                            c.getString(c.getColumnIndex("session")).replaceAll(" ","_") + "_" +
-                            c.getString(c.getColumnIndex("batch")).replaceAll(" ","_");
+                    String t = groupName.replaceAll(" ","_") + "_" +
+                            session.replaceAll(" ","_") + "_" +
+                            batch.replaceAll(" ","_");
                     groupList.add(t);
                 }catch (CursorIndexOutOfBoundsException e){
                     e.printStackTrace();
                 }
-
-
-                //s1 = "insert into " + sheetName + " " + c.getString(c.getColumnIndex("id"));
-                //s1 = "ALTER TABLE "+sheetName+" ADD COLUMN "+ id +" INTEGER DEFAULT 0";
-                //sqLiteDatabase.execSQL(s1);
                 c.moveToNext();
             }
             c.close();
@@ -83,9 +82,9 @@ public class TakeAttendance extends AppCompatActivity {
 
     }
 
-    void getSheetNameAndGroupName(int i){
+    void startTakingAttendance(int i){
 
-        Intent intent = new Intent(this,TakingAttendance.class);
+        Intent intent = new Intent(this,RollCall.class);
         intent.putExtra("sheetName",sheetList.get(i));
         intent.putExtra("groupName",groupList.get(i));
         startActivity(intent);

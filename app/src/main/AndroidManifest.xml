@@ -55,7 +55,11 @@
         <activity android:name=".GiveAttendance" />
         <activity android:name=".GivingAttendance" />
         <activity android:name=".TakeAttendance" />
-        <activity android:name=".TakingAttendance"></activity>
+        <activity android:name=".TakingAttendance" />
+        <activity
+            android:name=".RollCall"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
     </application>
 
 </manifest>

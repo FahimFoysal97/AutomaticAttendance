@@ -40,13 +40,15 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
 import static java.lang.Thread.sleep;
 
-public class AddStudentGroup extends AppCompatActivity {
+public class RollCall extends AppCompatActivity {
 
 
     WifiManager wifiManager;
@@ -54,16 +56,26 @@ public class AddStudentGroup extends AppCompatActivity {
     WifiP2pManager.Channel channel;
     BroadcastReceiver broadcastReceiver;
     IntentFilter intentFilter;
-    Vector<WifiP2pDevice> connectedDevices = new Vector<>();
+    //Vector<WifiP2pDevice> connectedDevices = new Vector<>();
     //Vector<String> connectedDevicesName = new Vector<>();
     List<WifiP2pDevice> peers = new ArrayList<>();
     WifiP2pManager.PeerListListener peerListListener;
     WifiP2pDevice device;
-    String id,name,done;
-    ArrayList<Student> studentList = new ArrayList<>();
-    ArrayList<String> studentInfoList = new ArrayList<>();
-    ArrayAdapter arrayAdapter;
+    //String id,name,done;
+    //ArrayList<Student> studentList = new ArrayList<>();
+    //ArrayList<String> studentInfoList = new ArrayList<>();
+    //ArrayAdapter arrayAdapter;
+    ArrayList<String> studentName = new ArrayList<>();
+    ArrayList<String> studentId = new ArrayList<>();
+    ArrayList<String> studentDeviceAddress = new ArrayList<>();
+    ArrayList<String> studentArrayList = new ArrayList<>();
+    ArrayList<String> studentArrayList2 = new ArrayList<>();
+    ArrayAdapter adapter;
+    ArrayAdapter adapter2;
     //ServerSocket serverSocket;
+    boolean[] present;
+    int totalStudent;
+    ListView studentListView,studentListView2;
 
     volatile boolean add = false;
     volatile boolean remove = false;
@@ -72,23 +84,36 @@ public class AddStudentGroup extends AppCompatActivity {
     volatile boolean connectToDevice = false;
     volatile boolean selectDevice = true;
     volatile boolean wait = true;
-
+    String groupName,sheetName;
     //Thread connectToDeviceThread;
     Thread selectDeviceThread;
     //Thread waitThread;
 
-    ListView listView;
+    //ListView listView;
 
 
     //ServerClass serverClass;
     //ClientClass clientClass;
-    ServerSendReceive serverSendReceive;
-    ClientSendReceive clientSendReceive;
+    //ServerSendReceive serverSendReceive;
+    //ClientSendReceive clientSendReceive;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_student_group);
+        setContentView(R.layout.activity_roll_call);
+        sheetName = getIntent().getExtras().getString("sheetName");
+        groupName = getIntent().getExtras().getString("groupName");
+        adapter2 = new ArrayAdapter(RollCall.this.getApplicationContext(), android.R.layout.simple_list_item_1, studentArrayList2);
+        studentListView2 = findViewById(R.id.listView_studentList_rollCall2);
+        studentListView2.setAdapter(adapter2);
+        setAllData();
+        totalStudent=studentName.size();
+        studentListView = findViewById(R.id.listView_studentList_rollCall);
+
+        present = new boolean[totalStudent];
+        for(int i=0; i<present.length; i++){
+            present[i] = false;
+        }
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         if (wifiManager != null && !wifiManager.isWifiEnabled()) {
             wifiManager.setWifiEnabled(true);
@@ -98,9 +123,9 @@ public class AddStudentGroup extends AppCompatActivity {
             wifiManager.setWifiEnabled(true);
         }*/
 
-        listView = findViewById(R.id.listView);
-        arrayAdapter = new ArrayAdapter<>(AddStudentGroup.this.getApplicationContext(), android.R.layout.simple_list_item_1, studentInfoList);
-        listView.setAdapter(arrayAdapter);
+        //listView = findViewById(R.id.listView_studentList_rollCall);
+        //arrayAdapter = new ArrayAdapter<>(AddStudentGroup2.this.getApplicationContext(), android.R.layout.simple_list_item_1, studentInfoList);
+        //listView.setAdapter(arrayAdapter);
         wifiP2pManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = wifiP2pManager.initialize(this,getMainLooper(),null);
         broadcastReceiver = new WiFiDirectBroadcastReceiver(wifiP2pManager, channel, this);
@@ -109,7 +134,10 @@ public class AddStudentGroup extends AppCompatActivity {
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        ((Button)findViewById(R.id.button_Refresh)).setText("Start connecting");
+        adapter = new ArrayAdapter(RollCall.this.getApplicationContext(), android.R.layout.simple_list_item_1, studentArrayList);
+
+
+        //((Button)findViewById(R.id.button_Refresh)).setText("Start connecting");
         /*serverSocket = null;
         try {
             serverSocket = new ServerSocket(8888);
@@ -131,10 +159,10 @@ public class AddStudentGroup extends AppCompatActivity {
                     //System.out.println("Device list changed 2");
                 }
 
-            if( (peers.size()==0) && connectedDevices.isEmpty()  )Toast.makeText(getApplicationContext(),"No device found",Toast.LENGTH_SHORT).show();
+            //if( (peers.size()==0))Toast.makeText(getApplicationContext(),"No device found",Toast.LENGTH_SHORT).show();
         };
 
-        wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+        /*wifiP2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
                 //Toast.makeText(getApplicationContext(), "Searching Devices...", Toast.LENGTH_SHORT).show();
@@ -143,28 +171,28 @@ public class AddStudentGroup extends AppCompatActivity {
 
             @Override
             public void onFailure(int reason) {
-                /*connectionStatus.setText("Discovery starting failed");*/
+                *//*connectionStatus.setText("Discovery starting failed");*//*
             }
-        });
+        });*/
 
-        findViewById(R.id.button_Refresh).setOnClickListener(v->{
+        findViewById(R.id.button_startRollCall_rollCall).setOnClickListener(v->{
             if(!isRefreshing){
                 isRefreshing = true;
                 startConnecting();
-                ((Button) findViewById(R.id.button_Refresh)).setText("Stop Connecting");
+                ((Button) findViewById(R.id.button_startRollCall_rollCall)).setText("Stop Roll Call");
             }
             else {
                 isRefreshing = false;
                 stopConnecting();
-                ((Button) findViewById(R.id.button_Refresh)).setText("Start Connecting");
+                ((Button) findViewById(R.id.button_startRollCall_rollCall)).setText("Start Roll Call");
             }
 
         });
 
-        findViewById(R.id.button_Back).setOnClickListener(v-> {
+        /*findViewById(R.id.button_Back).setOnClickListener(v-> {
             if(selectDeviceThread!=null && selectDeviceThread.isAlive())selectDeviceThread.interrupt();
             finish();
-        });
+        });*/
 
         /*findViewById(R.id.button_next).setOnClickListener( v -> {
 
@@ -175,99 +203,40 @@ public class AddStudentGroup extends AppCompatActivity {
 
     }
 
-
-    public void nextButtonClicked(View view){
-        if(connectedDevices.isEmpty()){
-            System.out.println("No Devices");
-            return;
-        }
-        if(isRefreshing)selectDeviceThread.interrupt();
-        setContentView(R.layout.activity_add_student_group_done);
-        findViewById(R.id.button_done).setOnClickListener(v1 -> {
-            //finish();
-            String groupName,session,batch;
-            groupName = ((EditText)findViewById(R.id.editText_group_name)).getText().toString();
-            session = ((EditText)findViewById(R.id.editText_session)).getText().toString();
-            batch = ((EditText)findViewById(R.id.editText_batch_addStudentGroup)).getText().toString();
-
-            if(!isAlphanumeric(groupName)){
-                ((TextView)findViewById(R.id.textView_warning)).setText("Group name should be alphanumeric or underscore");
-                return;
-            }
-            if(!Character.isAlphabetic(groupName.charAt(0))){
-                ((TextView)findViewById(R.id.textView_warning)).setText("Group name should be alphanumeric or underscore and start with alphabet");
-                return;
-            }
-            if(!isAlphanumeric(session)){
-                ((TextView)findViewById(R.id.textView_warning)).setText("Session should be alphanumeric or underscore");
-                return;
-            }
-            if(!isAlphanumeric(batch)){
-                ((TextView)findViewById(R.id.textView_warning)).setText("Batch should be alphanumeric or underscore");
-                return;
-            }
-
-
-            SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
-            sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS StudentGroupList (groupName varchar PRIMARY KEY, session varchar, batch varchar) ");
-            String string = "select * from StudentGroupList where groupName = \""+groupName+"\"" ;
-            Cursor c = sqLiteDatabase.rawQuery(string,null);
-            //int i = c.getColumnIndex("groupname");
-            c.moveToFirst();
-            if( c.getCount()>0){
-                ((TextView)findViewById(R.id.textView_warning)).setText("GroupName exist");
-                return;
-            }
-            else {
-                //String string2 = "Insert into StudentGroupList (groupname,session) values (?,?)";
-                //sqLiteDatabase.rawQuery(string2 ,new String[]{groupName,session});
-                ContentValues values = new ContentValues();
-                values.put("groupName",groupName);
-                values.put("session",session);
-                values.put("batch",batch);
-                sqLiteDatabase.insert("StudentGroupList",null,values);
-                String str = groupName.replaceAll(" ","_")+"_"+session.replaceAll(" ","_")+"_"+batch.replaceAll(" ","_");
-                System.out.println(str);
-                sqLiteDatabase.execSQL("CREATE TABLE \"" + str +"\" (id varchar primary key, name varchar, deviceAddress varchar unique)");
-                //sqLiteDatabase.close();
-                addIntoTheStudentList(str);
-
-                String temp = "Group name : " + groupName +
-                        "\nSession : " + session +
-                        "\nBatch : " + batch;
-
-                StudentListGroup.groupNames.add(temp);
-                StudentListGroup.arrayAdapter.notifyDataSetChanged();
-                c.close();
-                sqLiteDatabase.close();
-                finish();
-            }
-
-        });
-    }
-
-    public boolean isAlphanumeric(String str)
-    {
-        char[] charArray = str.toCharArray();
-        for(char c:charArray)
-        {
-            if (!Character.isLetterOrDigit(c) && !Character.isWhitespace(c) && c!='_' )
-                return false;
-        }
-        return true;
-    }
-
-    void addIntoTheStudentList(String tableName){
-
+    void setAllData(){
         SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
-        for(Student student : studentList){
-            ContentValues values = new ContentValues();
-            values.put("id",student.getId());
-            values.put("name",student.getName());
-            values.put("deviceAddress",student.getDeviceAddress());
-            sqLiteDatabase.insert(tableName,null,values);
+        String str = "Select * from " + groupName + " order by id";
+        Cursor c = sqLiteDatabase.rawQuery(str,null);
+        if (c.moveToFirst()) {
+            while (!c.isAfterLast()) {
+                studentName.add(c.getString(c.getColumnIndex("name")));
+                studentId.add(c.getString(c.getColumnIndex("id")));
+                studentDeviceAddress.add(c.getString(c.getColumnIndex("deviceAddress")));
+                //sqLiteDatabase.execSQL(s1);
+                String str1 = "ID : " + c.getString(c.getColumnIndex("id"))+
+                        "\nName : " + c.getString(c.getColumnIndex("name"));
+                studentArrayList2.add(str1);
+                System.out.println(studentArrayList2);
+
+                c.moveToNext();
+            }
+            c.close();
+            //adapter2.notifyDataSetChanged();
+            /*studentListView2.post(() -> {
+                //studentListView2.setAdapter(adapter2);
+                adapter2.notifyDataSetChanged();
+            });*/
         }
+        ((TextView)findViewById(R.id.textView_absentNumber_rollCall)).setText("Absent : "+studentArrayList2.size());
+        studentListView2.setAdapter(adapter2);
+        studentListView2.post(()->adapter2.notifyDataSetChanged());
+
     }
+
+
+
+
+
 
 
 
@@ -291,7 +260,7 @@ public class AddStudentGroup extends AppCompatActivity {
             List<WifiP2pDevice> peerList;
             int i = 0;
             while (!selectDeviceThread.isInterrupted()) {
-                System.out.println("Into the selectThread 2");
+                //System.out.println("Into the selectThread 2");
                 peerList = new ArrayList<>(peers);
                 //System.out.println("selectDevice : " + selectDevice);
                 //System.out.println("isDeviceListChanged : " + isDeviceListChanged);
@@ -307,18 +276,13 @@ public class AddStudentGroup extends AppCompatActivity {
 
 
 
-                        if (!connectedDevices.contains(device)) {
+                        if (studentDeviceAddress.contains(device.deviceAddress))if(!present[studentDeviceAddress.indexOf(device.deviceAddress)]) {
+
                             WifiP2pConfig wifiP2pConfig = new WifiP2pConfig();
                             wifiP2pConfig.deviceAddress = device.deviceAddress;
-                            //wifiP2pConfig.groupOwnerIntent = 15;
                             add = false;
                             System.out.println("trying to connect to " + device.deviceName);
-                            //serverSocket = null;
-                            /*try {
-                                serverSocket = new ServerSocket(8888);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }*/
+
                             wait = true;
                             wifiP2pManager.connect(channel, wifiP2pConfig, new WifiP2pManager.ActionListener() {
                                 @Override
@@ -332,9 +296,9 @@ public class AddStudentGroup extends AppCompatActivity {
                                 }
                             });
 
-                            for(int i1 = 0;  i1 <12; i1++){
+                            for(int i1 = 0;  i1 <30; i1++){
                                 try {
-                                    sleep(500);
+                                    sleep(200);
                                     if(!wait)break;
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
@@ -349,26 +313,32 @@ public class AddStudentGroup extends AppCompatActivity {
                                 //waitThread.interrupt();
                                 //remove = false;
                                 System.out.println(device.deviceName + " inside adding");
-                                connectedDevices.add(device);
+                                present[studentDeviceAddress.indexOf(device.deviceAddress)]=true;
+
+                                //connectedDevices.add(device);
                                 //connectedDevicesName.add(device.deviceName);
 
-
+                                String str = "ID : " + studentId.get(studentDeviceAddress.indexOf(device.deviceAddress))+
+                                        "\nName : " + studentName.get(studentDeviceAddress.indexOf(device.deviceAddress));
+                                studentArrayList.add(str);
+                                ((TextView)findViewById(R.id.textView_presentNumber_rollCall)).post(() -> {
+                                    ((TextView)findViewById(R.id.textView_presentNumber_rollCall)).setText("Present : "+studentArrayList.size());
+                                });
                                 //listView.post(() -> listView.setAdapter(arrayAdapter));
-                                while (!remove){
-                                    try {
-                                        sleep(200);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
+                                studentListView.post(() -> {
+                                    studentListView.setAdapter(adapter);
+                                    adapter.notifyDataSetChanged();
+                                });
 
-                                System.out.println("now adding");
-                                //listView.post(() -> listView.setAdapter(arrayAdapter));
-                                studentList.add(new Student(name,id,device.deviceAddress));
-                                studentInfoList.add("Name : " + name + "\nID : " + id + "\nDevice Address : " + device.deviceAddress);
-                                //arrayAdapter.notifyDataSetChanged();
-                                ArrayAdapter adapter = new ArrayAdapter(AddStudentGroup.this.getApplicationContext(), android.R.layout.simple_list_item_1, studentInfoList);
-                                listView.post(()->listView.setAdapter(adapter));
+                                studentArrayList2.remove(str);
+                                ((TextView)findViewById(R.id.textView_absentNumber_rollCall)).post(() -> {
+                                    ((TextView)findViewById(R.id.textView_absentNumber_rollCall)).setText("Absent : "+studentArrayList2.size());
+                                });
+                                studentListView2.post(() -> {
+                                    studentListView2.setAdapter(adapter2);
+                                    adapter2.notifyDataSetChanged();
+                                });
+
                                 wifiP2pManager.removeGroup(channel, new WifiP2pManager.ActionListener() {
                                     @Override
                                     public void onSuccess() {
@@ -444,10 +414,35 @@ public class AddStudentGroup extends AppCompatActivity {
     }
 
     void stopConnecting(){
-
-            selectDeviceThread.interrupt();
+            System.out.println("Stop");
+            if(selectDeviceThread!=null)selectDeviceThread.interrupt();
             //connectToDeviceThread.interrupt();
 
+    }
+
+    public void doneButtonClicked(View view){
+        if(isRefreshing){
+            Toast.makeText(getApplicationContext(),"Stop Roll Call First",Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
+        ContentValues values = new ContentValues();
+        Date today = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss a");
+        String dateToStr = format.format(today);
+        values.put("dateTime",dateToStr);
+        for(int i = 0; i<totalStudent; i++){
+            if(present[i]){
+                values.put("id"+studentId.get(i),1);
+            }
+            else {
+                values.put("id"+studentId.get(i),0);
+            }
+        }
+        sqLiteDatabase.insert(sheetName,null,values);
+        sqLiteDatabase.close();
+        finish();
     }
 
     WifiP2pManager.ConnectionInfoListener connectionInfoListener =  wifiP2pInfo -> {
@@ -455,15 +450,15 @@ public class AddStudentGroup extends AppCompatActivity {
         final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
         if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
             remove = false;
-            serverSendReceive = new ServerSendReceive();
-            serverSendReceive.start();
+            //serverSendReceive = new ServerSendReceive();
+            //serverSendReceive.start();
             wait = false;
             add = true;
             System.out.println("Inside server");
         } else if (wifiP2pInfo.groupFormed) {
             remove = false;
-            clientSendReceive = new ClientSendReceive(groupOwnerAddress);
-            clientSendReceive.start();
+            //clientSendReceive = new ClientSendReceive(groupOwnerAddress);
+            //clientSendReceive.start();
             wait = false;
             add = true;
             System.out.println("Inside client");
@@ -486,8 +481,8 @@ public class AddStudentGroup extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        selectDeviceThread.interrupt();
-        if(serverSendReceive!=null)if(serverSendReceive.isAlive())try {
+        if(selectDeviceThread!=null && selectDeviceThread.isAlive())selectDeviceThread.interrupt();
+        /*if(serverSendReceive!=null)if(serverSendReceive.isAlive())try {
             if(serverSendReceive.bufferedWriter!=null)serverSendReceive.bufferedWriter.close();
             if(serverSendReceive.bufferedReader!=null)serverSendReceive.bufferedReader.close();
             if(serverSendReceive.serverSocket!=null)serverSendReceive.serverSocket.close();
@@ -508,7 +503,7 @@ public class AddStudentGroup extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-        }
+        }*/
         if(wifiManager != null && wifiManager.isWifiEnabled()){
             wifiManager.setWifiEnabled(false);
         }
@@ -521,34 +516,6 @@ public class AddStudentGroup extends AppCompatActivity {
 
 
 
-    class Student{
-        String name;
-        String id;
-        String deviceAddress;
-
-        Student(String name, String id, String deviceAddress){
-            this.name = name;
-            this.id = id;
-            this.deviceAddress = deviceAddress;
-        }
-        public String getName() {
-            return name;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getDeviceAddress() {
-            return deviceAddress;
-        }
-
-        @Override
-        public String toString() {
-            String str = "Name : " + name + "\nID : " + id + "\nDevice Address : " + deviceAddress;
-            return str;
-        }
-    }
 
 
 
@@ -559,7 +526,8 @@ public class AddStudentGroup extends AppCompatActivity {
 
 
 
-    class ServerSendReceive extends Thread{
+
+    /*class ServerSendReceive extends Thread{
 
         Socket socket;
         ServerSocket serverSocket;
@@ -582,6 +550,8 @@ public class AddStudentGroup extends AppCompatActivity {
                 bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             } catch (IOException e) {
+                e.printStackTrace();
+            } catch (Exception e){
                 e.printStackTrace();
             }
 
@@ -705,7 +675,7 @@ public class AddStudentGroup extends AppCompatActivity {
             }
         }
     }
-
+*/
 
 
 
@@ -724,12 +694,12 @@ public class AddStudentGroup extends AppCompatActivity {
 
         private WifiP2pManager wifiP2pManager;
         private WifiP2pManager.Channel channel;
-        private AddStudentGroup addStudentGroup;
+        private RollCall rollCall;
 
-        public WiFiDirectBroadcastReceiver(WifiP2pManager wifiP2pManager, WifiP2pManager.Channel channel, AddStudentGroup addStudentGroup){
+        public WiFiDirectBroadcastReceiver(WifiP2pManager wifiP2pManager, WifiP2pManager.Channel channel, RollCall rollCall){
             this.wifiP2pManager = wifiP2pManager;
             this.channel = channel;
-            this.addStudentGroup = addStudentGroup;
+            this.rollCall = rollCall;
         }
 
         @Override
@@ -744,7 +714,7 @@ public class AddStudentGroup extends AppCompatActivity {
             }
             else if(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)){
                 if(wifiP2pManager!=null){
-                    wifiP2pManager.requestPeers(channel,addStudentGroup.peerListListener);
+                    wifiP2pManager.requestPeers(channel,rollCall.peerListListener);
                 }
             }
             else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
@@ -754,7 +724,7 @@ public class AddStudentGroup extends AppCompatActivity {
                 NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
                 if(networkInfo.isConnected()){
 
-                        wifiP2pManager.requestConnectionInfo(channel,addStudentGroup.connectionInfoListener);
+                        wifiP2pManager.requestConnectionInfo(channel,rollCall.connectionInfoListener);
 
                 }
                 else {

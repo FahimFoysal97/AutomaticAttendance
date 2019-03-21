@@ -85,30 +85,6 @@ public class RegisterPanel extends AppCompatActivity {
         courseField = findViewById(R.id.editText_course_name_register);
         warning = findViewById(R.id.textView_warning_register);
 
-
-        /*try{
-            if(serverSocket!=null)serverSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        serverSocket = null;
-
-        try {
-            serverSocket = new ServerSocket(8888);
-
-        } catch (IOException e) {
-            *//*try {
-                serverSocket.setReuseAddress(true);
-            } catch (SocketException e1) {
-                e1.printStackTrace();
-            }*//*
-            System.out.println("Server socket not initialized");
-            e.printStackTrace();
-        }
-*/
-
-
-
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         if (wifiManager != null && !wifiManager.isWifiEnabled()) {
             wifiManager.setWifiEnabled(true);
@@ -242,12 +218,12 @@ public class RegisterPanel extends AppCompatActivity {
 
 
         SQLiteDatabase sqLiteDatabase = openOrCreateDatabase("StudentPanel",MODE_PRIVATE,null);
-        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursename varchar, name varchar, id varchar) ");
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (courseName varchar, name varchar, id varchar) ");
         ContentValues values = new ContentValues();
-        values.put("coursename",courseName);
+        values.put("courseName",courseName);
         values.put("name",name);
         values.put("id",id);
-        sqLiteDatabase.insert("Courselist",null,values);
+        sqLiteDatabase.insert("CourseList",null,values);
 
         if(wifiManager.isWifiEnabled())wifiManager.setWifiEnabled(false);
     }
@@ -344,8 +320,11 @@ public class RegisterPanel extends AppCompatActivity {
                         if(jsonObject.getString("done").equals("done"))done();
                     }
 
-                } catch (IOException | JSONException e) {
+                } catch (IOException  e) {
                     e.printStackTrace();
+                } catch (JSONException e){
+                    e.printStackTrace();
+                    break;
                 }
             }
         }

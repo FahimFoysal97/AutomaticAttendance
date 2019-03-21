@@ -44,15 +44,15 @@ public class TeacherPanelCourseList extends AppCompatActivity {
 
     void showCourseList(){
         SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
-        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursetitle varchar, coursecode varchar)");
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (courseTitle varchar, courseCode varchar)");
         Cursor c = sqLiteDatabase.rawQuery("Select * from courselist",null);
 
         c.moveToFirst();
         while(c!=null && !c.isAfterLast()){
             try{
                 String str[] = {
-                        c.getString(c.getColumnIndex("coursetitle")),
-                        c.getString(c.getColumnIndex("coursecode"))
+                        c.getString(c.getColumnIndex("courseTitle")),
+                        c.getString(c.getColumnIndex("courseCode"))
                 };
 
                 addCourse(str[0],str[1]);

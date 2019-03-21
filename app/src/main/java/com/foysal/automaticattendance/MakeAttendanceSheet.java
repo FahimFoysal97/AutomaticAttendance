@@ -78,15 +78,15 @@ public class MakeAttendanceSheet extends AppCompatActivity {
 
     void setCourseSpinner(){
         sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
-        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursecode varchar, coursetitle varchar)");
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (courseCode varchar, courseTitle varchar)");
         Cursor c = sqLiteDatabase.rawQuery("select * from CourseList",null);
 
 
         if (c.moveToFirst()) {
             while (!c.isAfterLast()) {
 
-                String str = c.getString(c.getColumnIndex("coursecode")) + " " +
-                        c.getString(c.getColumnIndex("coursetitle"));
+                String str =c.getString(c.getColumnIndex("courseCode")) + " " +
+                        c.getString(c.getColumnIndex("courseTitle"));
 
                 courses.add(str);
                 c.moveToNext();
@@ -99,13 +99,13 @@ public class MakeAttendanceSheet extends AppCompatActivity {
 
     void setStudentGroupSpinner(){
 
-        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS StudentGroupList (groupname varchar PRIMARY KEY, session varchar, batch varchar) ");
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS StudentGroupList (groupName varchar PRIMARY KEY, session varchar, batch varchar) ");
         Cursor c = sqLiteDatabase.rawQuery("select * from StudentGroupList",null);
 
 
         if (c.moveToFirst()) {
             while (!c.isAfterLast()) {
-                String str = c.getString(c.getColumnIndex("groupname")) + " " +
+                String str =c.getString(c.getColumnIndex("groupName")) + " " +
                         c.getString(c.getColumnIndex("session")) + " " +
                         c.getString(c.getColumnIndex("batch"));
 
@@ -120,19 +120,19 @@ public class MakeAttendanceSheet extends AppCompatActivity {
 
     void getCourseInfo(String courseName){
         sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
-        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursecode varchar, coursetitle varchar)");
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (courseCode varchar, courseTitle varchar)");
         Cursor c = sqLiteDatabase.rawQuery("select * from CourseList",null);
 
 
         if (c.moveToFirst()) {
             while (!c.isAfterLast()) {
 
-                String str = c.getString(c.getColumnIndex("coursecode")) + " " +
-                        c.getString(c.getColumnIndex("coursetitle"));
+                String str = c.getString(c.getColumnIndex("courseCode")) + " " +
+                        c.getString(c.getColumnIndex("courseTitle"));
 
                 if(courseName.equals(str)){
-                    courseCode = c.getString(c.getColumnIndex("coursecode"));
-                    courseTitle = c.getString(c.getColumnIndex("coursetitle"));
+                    courseCode = c.getString(c.getColumnIndex("courseCode"));
+                    courseTitle = c.getString(c.getColumnIndex("courseTitle"));
                     break;
                 }
                 c.moveToNext();
@@ -143,18 +143,18 @@ public class MakeAttendanceSheet extends AppCompatActivity {
 
 
     void getStudentGroupInfo(String groupName){
-        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS StudentGroupList (groupname varchar PRIMARY KEY, session varchar, batch varchar) ");
+        sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS StudentGroupList (groupName varchar PRIMARY KEY, session varchar, batch varchar) ");
         Cursor c = sqLiteDatabase.rawQuery("select * from StudentGroupList",null);
 
 
         if (c.moveToFirst()) {
             while (!c.isAfterLast()) {
-                String str = c.getString(c.getColumnIndex("groupname")) + " " +
+                String str = c.getString(c.getColumnIndex("groupName")) + " " +
                         c.getString(c.getColumnIndex("session")) + " " +
                         c.getString(c.getColumnIndex("batch"));
 
                 if(groupName.equals(str)){
-                    studentGroupName = c.getString(c.getColumnIndex("groupname"));
+                    studentGroupName = c.getString(c.getColumnIndex("groupName"));
                     session = c.getString(c.getColumnIndex("session"));
                     batch = c.getString(c.getColumnIndex("batch"));
                     break;
@@ -175,9 +175,9 @@ public class MakeAttendanceSheet extends AppCompatActivity {
         }
         else {
             String sheetName = groupName.replaceAll(" ","_")  + "_" +  courseName.replaceAll(" ","_");
-            sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS AttendanceSheetList (coursecode varchar, coursetitle varchar, groupname varchar, session varchar, batch varchar, sheetname varchar primary key) ");
+            sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS AttendanceSheetList (courseCode varchar, courseTitle varchar, groupName varchar, session varchar, batch varchar, sheetName varchar primary key) ");
 
-            String sql = "SELECT sheetname FROM Attendancesheetlist WHERE sheetname = "+"\""+sheetName+"\"";
+            String sql = "SELECT sheetName FROM AttendanceSheetList WHERE sheetName = "+"\""+sheetName+"\"";
             Cursor c = sqLiteDatabase.rawQuery(sql, null);
             if(c.getCount()>0){
                 ((TextView)findViewById(R.id.textView_warning2)).setText("Sheet already exist");
@@ -185,12 +185,12 @@ public class MakeAttendanceSheet extends AppCompatActivity {
             }
             else {
                 ContentValues values = new ContentValues();
-                values.put("coursecode",courseCode);
-                values.put("coursetitle",courseTitle);
-                values.put("groupname",studentGroupName);
+                values.put("courseCode",courseCode);
+                values.put("courseTitle",courseTitle);
+                values.put("groupName",studentGroupName);
                 values.put("session",session);
                 values.put("batch",batch);
-                values.put("sheetname",sheetName);
+                values.put("sheetName",sheetName);
                 sqLiteDatabase.insert("AttendanceSheetList",null,values);
 
 

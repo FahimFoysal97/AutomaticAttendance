@@ -35,15 +35,15 @@ public class TeacherPanelAddCourse extends AppCompatActivity {
         else {
             TeacherPanelCourseList.addCourse(editTextCourseTitle.getText().toString(), editTextCourseCode.getText().toString());
             SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel",MODE_PRIVATE,null);
-            sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (coursetitle varchar, coursecode varchar)");
-            String title,code,session,batch;
+            sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS CourseList (courseTitle varchar, courseCode varchar)");
+            String title,code;
             title = editTextCourseTitle.getText().toString();
             code = editTextCourseCode.getText().toString();
             //session = editTextSession.getText().toString();
 
             ContentValues values = new ContentValues();
-            values.put("coursetitle",title);
-            values.put("coursecode",code);
+            values.put("courseTitle",title);
+            values.put("courseCode",code);
             //values.put("session",session);
 
 
