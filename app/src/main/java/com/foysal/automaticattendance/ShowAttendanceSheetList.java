@@ -1,22 +1,17 @@
 package com.foysal.automaticattendance;
 
-import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import java.util.ArrayList;
 
-public class TakeAttendance extends AppCompatActivity {
+public class ShowAttendanceSheetList extends AppCompatActivity {
 
     ListView listView;
     ArrayList<String> list = new ArrayList<>();
@@ -28,23 +23,17 @@ public class TakeAttendance extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_take_attendance);
-        listView = findViewById(R.id.listView_take_attendance);
+        setContentView(R.layout.activity_show_attendance);
+        listView = findViewById(R.id.listView_sheetList_showAttendanceSheetlist);
         adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,list);
         listView.setAdapter(adapter);
-        showList();
+        setData();
 
-
-        listView.setOnItemClickListener((parent, view, position, id) -> startTakingAttendance(position));
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+        listView.setOnItemClickListener((parent, view, position, id) -> showAttendance(position));
 
     }
 
-    void showList() {
+    void setData(){
         SQLiteDatabase sqLiteDatabase = this.openOrCreateDatabase("TeacherPanel", MODE_PRIVATE, null);
         sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS AttendanceSheetList (courseCode varchar, courseTitle varchar, groupName varchar, session varchar, batch varchar, sheetName varchar primary key) ");
 
@@ -72,6 +61,7 @@ public class TakeAttendance extends AppCompatActivity {
                         session.replaceAll(" ", "_") + "_" +
                         batch.replaceAll(" ", "_");
                 groupList.add(t);
+
             } catch (CursorIndexOutOfBoundsException e) {
                 e.printStackTrace();
             }
@@ -81,12 +71,10 @@ public class TakeAttendance extends AppCompatActivity {
         sqLiteDatabase.close();
     }
 
-    void startTakingAttendance(int i){
-
-        Intent intent = new Intent(this,RollCall.class);
+    void showAttendance(int i){
+        Intent intent = new Intent(this,AttendanceSheet.class);
         intent.putExtra("sheetName",sheetList.get(i));
         intent.putExtra("groupName",groupList.get(i));
         startActivity(intent);
     }
-
 }

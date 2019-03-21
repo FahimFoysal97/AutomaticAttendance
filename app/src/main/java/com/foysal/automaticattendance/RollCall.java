@@ -101,6 +101,7 @@ public class RollCall extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_roll_call);
+
         sheetName = getIntent().getExtras().getString("sheetName");
         groupName = getIntent().getExtras().getString("groupName");
         adapter2 = new ArrayAdapter(RollCall.this.getApplicationContext(), android.R.layout.simple_list_item_1, studentArrayList2);

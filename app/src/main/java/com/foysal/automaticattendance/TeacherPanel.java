@@ -32,5 +32,9 @@ public class TeacherPanel extends AppCompatActivity {
         startActivity(intent);
     }
 
+    public void showAttendanceSheetsButtonClicked(View view){
+        Intent intent = new Intent(getApplicationContext(),ShowAttendanceSheetList.class);
+        startActivity(intent);
+    }
 
 }
