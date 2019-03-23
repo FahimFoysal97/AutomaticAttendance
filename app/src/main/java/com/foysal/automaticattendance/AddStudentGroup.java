@@ -332,9 +332,9 @@ public class AddStudentGroup extends AppCompatActivity {
                                 }
                             });
 
-                            for(int i1 = 0;  i1 <12; i1++){
+                            for(int i1 = 0;  i1 <30; i1++){
                                 try {
-                                    sleep(500);
+                                    sleep(200);
                                     if(!wait)break;
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
