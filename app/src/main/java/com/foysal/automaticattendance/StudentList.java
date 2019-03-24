@@ -15,7 +15,7 @@ public class StudentList extends AppCompatActivity {
     String groupName;
     ListView listView;
     ArrayList<String> studentsInfo = new ArrayList<>();
-    ArrayAdapter adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,studentsInfo);
+    ArrayAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +23,7 @@ public class StudentList extends AppCompatActivity {
         setContentView(R.layout.activity_student_list);
 
         listView = findViewById(R.id.listView_studentList_studentList);
+        adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,studentsInfo);
         listView.setAdapter(adapter);
         groupName = getIntent().getExtras().getString("groupName");
         showList();
