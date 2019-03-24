@@ -61,7 +61,8 @@
             android:windowSoftInputMode="adjustNothing" />
         <activity android:name=".ShowAttendanceSheetList" />
         <activity android:name=".AttendanceSheet" />
-        <activity android:name=".IndividualStudentAttendance"></activity>
+        <activity android:name=".IndividualStudentAttendance" />
+        <activity android:name=".StudentList"></activity>
     </application>
 
 </manifest>

@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -16,6 +17,7 @@ public class StudentListGroup extends AppCompatActivity {
 
     static ArrayAdapter arrayAdapter;
     static ArrayList<String> groupNames = new ArrayList<>();
+    static ArrayList<String> groupNames2 = new ArrayList<>();
     ListView listView;
 
     @Override
@@ -27,6 +29,11 @@ public class StudentListGroup extends AppCompatActivity {
         arrayAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,groupNames);
         listView.setAdapter(arrayAdapter);
         showList();
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            Intent intent = new Intent(getApplicationContext(),StudentList.class);
+            intent.putExtra("groupName",groupNames2.get(position));
+            startActivity(intent);
+        });
 
     }
 
@@ -47,6 +54,9 @@ public class StudentListGroup extends AppCompatActivity {
         while(!c.isAfterLast()){
             //System.out.println(i);
             try{
+                groupNames2.add(c.getString(c.getColumnIndex("groupName")).replaceAll(" ","_") + "_" +
+                        c.getString(c.getColumnIndex("session")).replaceAll(" ","_") + "_" +
+                        c.getString(c.getColumnIndex("batch")));
                 String str = "Group name : "+c.getString(c.getColumnIndex("groupName")) + "\nSession : " +c.getString(c.getColumnIndex("session")) + "\nBatch : "+c.getString(c.getColumnIndex("batch"));
                 groupNames.add(str);
                 c.moveToNext();
@@ -55,7 +65,11 @@ public class StudentListGroup extends AppCompatActivity {
             }
 
         }
-        arrayAdapter.notifyDataSetChanged();
+        listView.post(()->
+        {
+            listView.setAdapter(arrayAdapter);
+            arrayAdapter.notifyDataSetChanged();
+        });
         c.close();
         sqLiteDatabase.close();
     }

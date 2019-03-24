@@ -23,7 +23,7 @@
             android:layout_margin="0dp"
             android:layout_marginTop="8dp"
             android:onClick="studentListButtonClicked"
-            android:text="Students List"
+            android:text="Students Group List"
             android:textAllCaps="false"
             app:layout_constraintEnd_toEndOf="@+id/button_My_Courses_List"
             app:layout_constraintStart_toStartOf="@+id/button_My_Courses_List"
